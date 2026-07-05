@@ -1,0 +1,12 @@
+{
+  "name": "cycling-almanac",
+  "private": true,
+  "description": "單車騎行農民曆 — AI 路線解析、真實路網導航、逐段坡度與撤退點",
+  "scripts": {
+    "build": "python3 build.py",
+    "dev": "netlify dev"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^2.8.0"
+  }
+}
