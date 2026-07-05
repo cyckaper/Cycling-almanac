@@ -342,7 +342,8 @@ TEMPLATE = r'''<!DOCTYPE html>
   .route-tools{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0 0}
   .tools-note{font-size:12px; color:var(--muted)}
   a.mini-btn{text-decoration:none; display:inline-block}
-  .grade-chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+  .grade-chips{display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:6px}
+  .gk{font-size:11px; letter-spacing:.14em; color:var(--muted); margin-right:2px}
   .gchip{font-size:11.5px; padding:2px 8px; border-radius:999px; color:#FBF8F0; letter-spacing:.02em}
   .elevcv{display:block; width:100%; height:56px; margin-top:8px; border-bottom:1px solid var(--line)}
   .steps-tg{font-size:12px; color:var(--pine); cursor:pointer; background:none; border:0; padding:0; margin-top:8px;
@@ -506,9 +507,6 @@ TEMPLATE = r'''<!DOCTYPE html>
       </div>
       <p class="hint">每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。</p>
 
-      <p class="chips-k">熱門騎點 · 點一下加入</p>
-      <div class="chips" id="chips"></div>
-
       <div class="controls">
         <div class="ctl-group"><span class="ctl-label">出發時間</span><input type="time" id="startTime" class="time-input" value="06:30" step="300"></div>
         <div class="ctl-group"><span class="ctl-label">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label">分</span></div>
@@ -531,11 +529,6 @@ TEMPLATE = r'''<!DOCTYPE html>
       <span><i style="background:var(--risk)"></i>審慎</span>
       <span>頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退</span>
     </div>
-
-    <div class="section-div"><span>二十四節氣 · 騎行農民曆</span></div>
-    <div class="wheel-wrap">/*__WHEEL__*/</div>
-    <p class="wheel-cap">車 輪 即 節 氣 輪 · 家 為 輪 心</p>
-/*__ALMANAC__*/
 
     <footer class="colophon">
       <b>基地分析工作站</b> · 單車騎行農民曆（路線天時 + 節氣）原型<br>
@@ -711,11 +704,6 @@ function renderToday(){
         <span class="t"><span class="sd" style="background:var(--ink)">忌</span>${tt.ji.join(" · ")}</span>
       </div>
     </div>`;
-  // highlight on wheel
-  document.querySelectorAll('.wlbl.today').forEach(e=>e.classList.remove('today'));
-  const lbl=document.getElementById('wlbl-'+ti); if(lbl) lbl.classList.add('today');
-  document.querySelectorAll('.term.today').forEach(e=>e.classList.remove('today'));
-  const card=document.getElementById('term-'+ti); if(card) card.classList.add('today');
   return tt;
 }
 
@@ -777,10 +765,11 @@ function renderRoute(){
       let gradeHtml="";
       if(S.bands){
         head += ` · 均坡 ${S.avgG}% · 最陡 ${S.maxG}%`;
-        const B=S.bands, lbl={flat:"平",gentle:"緩",steep:"陡",vsteep:"很陡",extreme:"極陡"},
+        const B=S.bands, lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡"},
               col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318"};
-        gradeHtml='<div class="grade-chips">'+Object.keys(B).filter(k=>B[k]>=3)
-          .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${B[k]}%</span>`).join("")+'</div>';
+        const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
+        gradeHtml='<div class="grade-chips"><span class="gk">坡度組成</span>'+Object.keys(B).filter(k=>B[k]>=100)
+          .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
       }
       const cvId="cv"+i;
       const stepsHtml = S.steps && S.steps.length
@@ -912,8 +901,7 @@ function summarizeGrades(gr){
   s.forEach(x=>{ const L=x.d1-x.d0, g=Math.abs(x.g);
     if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
     else if(g<=12)bands.vsteep+=L; else bands.extreme+=L; });
-  const T=gr.total; Object.keys(bands).forEach(k=>bands[k]=Math.round(bands[k]/T*100));
-  return {maxG:Math.round(maxG*10)/10, avgG:Math.round(avgG*10)/10, bands};
+  return {maxG:Math.round(maxG*10)/10, avgG:Math.round(avgG*10)/10, bands}; // bands 為公尺
 }
 
 async function routeSegment(a,b){
@@ -1212,15 +1200,6 @@ wpInput.addEventListener('keydown', e=>{
 });
 document.addEventListener('click', e=>{ if(!e.target.closest('.combo')) hideSuggest(); });
 
-// ----- hot-spot chips add gazetteer waypoints directly -----
-const HOT=["大稻埕碼頭","大佳河濱公園","關渡金色水岸","八里左岸","淡水金色水岸","新店碧潭","日月潭環潭","武嶺"];
-const chipsEl=document.getElementById('chips');
-HOT.forEach(h=>{
-  const b=document.createElement('button'); b.className="chip"; b.textContent=h;
-  b.addEventListener('click',()=>{ const g=GAZ.find(x=>x.n===h||x.a.includes(h)); if(g) addWaypoint(wpFromGaz(g)); });
-  chipsEl.appendChild(b);
-});
-
 // ----- controls -----
 document.getElementById('clearBtn').addEventListener('click',()=>{ WAYPOINTS=[]; renderWaypoints(); ROUTE=[]; renderRoute(); });
 document.getElementById('startTime').addEventListener('input',e=>{
@@ -1247,8 +1226,6 @@ analyze();
 </html>'''
 
 html = (TEMPLATE
-  .replace("/*__WHEEL__*/", WHEEL)
-  .replace("/*__ALMANAC__*/", ALMANAC)
   .replace("/*__GAZ__*/", json.dumps(GAZ, ensure_ascii=False))
   .replace("/*__TERMS__*/", json.dumps(TERM_JS, ensure_ascii=False))
   .replace("/*__TSTARTS__*/", json.dumps(TERM_STARTS))
