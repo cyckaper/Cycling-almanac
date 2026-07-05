@@ -102,7 +102,8 @@
   .route-tools{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0 0}
   .tools-note{font-size:12px; color:var(--muted)}
   a.mini-btn{text-decoration:none; display:inline-block}
-  .grade-chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+  .grade-chips{display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:6px}
+  .gk{font-size:11px; letter-spacing:.14em; color:var(--muted); margin-right:2px}
   .gchip{font-size:11.5px; padding:2px 8px; border-radius:999px; color:#FBF8F0; letter-spacing:.02em}
   .elevcv{display:block; width:100%; height:56px; margin-top:8px; border-bottom:1px solid var(--line)}
   .steps-tg{font-size:12px; color:var(--pine); cursor:pointer; background:none; border:0; padding:0; margin-top:8px;
@@ -266,9 +267,6 @@
       </div>
       <p class="hint">每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。</p>
 
-      <p class="chips-k">熱門騎點 · 點一下加入</p>
-      <div class="chips" id="chips"></div>
-
       <div class="controls">
         <div class="ctl-group"><span class="ctl-label">出發時間</span><input type="time" id="startTime" class="time-input" value="06:30" step="300"></div>
         <div class="ctl-group"><span class="ctl-label">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label">分</span></div>
@@ -291,356 +289,6 @@
       <span><i style="background:var(--risk)"></i>審慎</span>
       <span>頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退</span>
     </div>
-
-    <div class="section-div"><span>二十四節氣 · 騎行農民曆</span></div>
-    <div class="wheel-wrap"><svg class="wheel" viewBox="0 0 480 480" role="img" aria-label="二十四節氣車輪">
-<circle cx="240" cy="240" r="204" fill="none" stroke="#2A2622" stroke-width="2" opacity="0.18"/>
-<path d="M 215.13 51.13 A 190.5 190.5 0 0 1 428.87 215.13" fill="none" stroke="#5FA046" stroke-width="15" opacity="0.95"/>
-<path d="M 428.87 215.13 A 190.5 190.5 0 0 1 264.87 428.87" fill="none" stroke="#CE8418" stroke-width="15" opacity="0.95"/>
-<path d="M 264.87 428.87 A 190.5 190.5 0 0 1 51.13 264.87" fill="none" stroke="#BE5027" stroke-width="15" opacity="0.95"/>
-<path d="M 51.13 264.87 A 190.5 190.5 0 0 1 215.13 51.13" fill="none" stroke="#34877C" stroke-width="15" opacity="0.95"/>
-<text x="311.8" y="146.4" class="wmk" fill="#5FA046" text-anchor="middle" dominant-baseline="central">春</text>
-<text x="333.6" y="311.8" class="wmk" fill="#CE8418" text-anchor="middle" dominant-baseline="central">夏</text>
-<text x="168.2" y="333.6" class="wmk" fill="#BE5027" text-anchor="middle" dominant-baseline="central">秋</text>
-<text x="146.4" y="168.2" class="wmk" fill="#34877C" text-anchor="middle" dominant-baseline="central">冬</text>
-<line id="wsp-0" x1="240.00" y1="190.00" x2="240.00" y2="59.00" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="240.00" cy="59.00" r="2.6" fill="#5FA046"/>
-<text id="wlbl-0" data-x="240.00" data-y="18.00" x="240.00" y="18.00" class="wlbl" text-anchor="middle" dominant-baseline="central">立春</text>
-<line id="wsp-1" x1="252.94" y1="191.70" x2="286.85" y2="65.17" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="286.85" cy="65.17" r="2.6" fill="#5FA046"/>
-<text id="wlbl-1" data-x="297.46" data-y="25.56" x="297.46" y="25.56" class="wlbl" text-anchor="middle" dominant-baseline="central">雨水</text>
-<line id="wsp-2" x1="265.00" y1="196.70" x2="330.50" y2="83.25" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="330.50" cy="83.25" r="2.6" fill="#5FA046"/>
-<text id="wlbl-2" data-x="351.00" data-y="47.74" x="351.00" y="47.74" class="wlbl" text-anchor="middle" dominant-baseline="central">驚蟄</text>
-<line id="wsp-3" x1="275.36" y1="204.64" x2="367.99" y2="112.01" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="367.99" cy="112.01" r="2.6" fill="#5FA046"/>
-<text id="wlbl-3" data-x="396.98" data-y="83.02" x="396.98" y="83.02" class="wlbl" text-anchor="middle" dominant-baseline="central">春分</text>
-<line id="wsp-4" x1="283.30" y1="215.00" x2="396.75" y2="149.50" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="396.75" cy="149.50" r="2.6" fill="#5FA046"/>
-<text id="wlbl-4" data-x="432.26" data-y="129.00" x="432.26" y="129.00" class="wlbl" text-anchor="middle" dominant-baseline="central">清明</text>
-<line id="wsp-5" x1="288.30" y1="227.06" x2="414.83" y2="193.15" stroke="#5FA046" stroke-width="1.2" opacity="0.62"/>
-<circle cx="414.83" cy="193.15" r="2.6" fill="#5FA046"/>
-<text id="wlbl-5" data-x="454.44" data-y="182.54" x="454.44" y="182.54" class="wlbl" text-anchor="middle" dominant-baseline="central">穀雨</text>
-<line id="wsp-6" x1="290.00" y1="240.00" x2="421.00" y2="240.00" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="421.00" cy="240.00" r="2.6" fill="#CE8418"/>
-<text id="wlbl-6" data-x="462.00" data-y="240.00" x="462.00" y="240.00" class="wlbl" text-anchor="middle" dominant-baseline="central">立夏</text>
-<line id="wsp-7" x1="288.30" y1="252.94" x2="414.83" y2="286.85" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="414.83" cy="286.85" r="2.6" fill="#CE8418"/>
-<text id="wlbl-7" data-x="454.44" data-y="297.46" x="454.44" y="297.46" class="wlbl" text-anchor="middle" dominant-baseline="central">小滿</text>
-<line id="wsp-8" x1="283.30" y1="265.00" x2="396.75" y2="330.50" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="396.75" cy="330.50" r="2.6" fill="#CE8418"/>
-<text id="wlbl-8" data-x="432.26" data-y="351.00" x="432.26" y="351.00" class="wlbl" text-anchor="middle" dominant-baseline="central">芒種</text>
-<line id="wsp-9" x1="275.36" y1="275.36" x2="367.99" y2="367.99" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="367.99" cy="367.99" r="2.6" fill="#CE8418"/>
-<text id="wlbl-9" data-x="396.98" data-y="396.98" x="396.98" y="396.98" class="wlbl" text-anchor="middle" dominant-baseline="central">夏至</text>
-<line id="wsp-10" x1="265.00" y1="283.30" x2="330.50" y2="396.75" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="330.50" cy="396.75" r="2.6" fill="#CE8418"/>
-<text id="wlbl-10" data-x="351.00" data-y="432.26" x="351.00" y="432.26" class="wlbl" text-anchor="middle" dominant-baseline="central">小暑</text>
-<line id="wsp-11" x1="252.94" y1="288.30" x2="286.85" y2="414.83" stroke="#CE8418" stroke-width="1.2" opacity="0.62"/>
-<circle cx="286.85" cy="414.83" r="2.6" fill="#CE8418"/>
-<text id="wlbl-11" data-x="297.46" data-y="454.44" x="297.46" y="454.44" class="wlbl" text-anchor="middle" dominant-baseline="central">大暑</text>
-<line id="wsp-12" x1="240.00" y1="290.00" x2="240.00" y2="421.00" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="240.00" cy="421.00" r="2.6" fill="#BE5027"/>
-<text id="wlbl-12" data-x="240.00" data-y="462.00" x="240.00" y="462.00" class="wlbl" text-anchor="middle" dominant-baseline="central">立秋</text>
-<line id="wsp-13" x1="227.06" y1="288.30" x2="193.15" y2="414.83" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="193.15" cy="414.83" r="2.6" fill="#BE5027"/>
-<text id="wlbl-13" data-x="182.54" data-y="454.44" x="182.54" y="454.44" class="wlbl" text-anchor="middle" dominant-baseline="central">處暑</text>
-<line id="wsp-14" x1="215.00" y1="283.30" x2="149.50" y2="396.75" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="149.50" cy="396.75" r="2.6" fill="#BE5027"/>
-<text id="wlbl-14" data-x="129.00" data-y="432.26" x="129.00" y="432.26" class="wlbl" text-anchor="middle" dominant-baseline="central">白露</text>
-<line id="wsp-15" x1="204.64" y1="275.36" x2="112.01" y2="367.99" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="112.01" cy="367.99" r="2.6" fill="#BE5027"/>
-<text id="wlbl-15" data-x="83.02" data-y="396.98" x="83.02" y="396.98" class="wlbl" text-anchor="middle" dominant-baseline="central">秋分</text>
-<line id="wsp-16" x1="196.70" y1="265.00" x2="83.25" y2="330.50" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="83.25" cy="330.50" r="2.6" fill="#BE5027"/>
-<text id="wlbl-16" data-x="47.74" data-y="351.00" x="47.74" y="351.00" class="wlbl" text-anchor="middle" dominant-baseline="central">寒露</text>
-<line id="wsp-17" x1="191.70" y1="252.94" x2="65.17" y2="286.85" stroke="#BE5027" stroke-width="1.2" opacity="0.62"/>
-<circle cx="65.17" cy="286.85" r="2.6" fill="#BE5027"/>
-<text id="wlbl-17" data-x="25.56" data-y="297.46" x="25.56" y="297.46" class="wlbl" text-anchor="middle" dominant-baseline="central">霜降</text>
-<line id="wsp-18" x1="190.00" y1="240.00" x2="59.00" y2="240.00" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="59.00" cy="240.00" r="2.6" fill="#34877C"/>
-<text id="wlbl-18" data-x="18.00" data-y="240.00" x="18.00" y="240.00" class="wlbl" text-anchor="middle" dominant-baseline="central">立冬</text>
-<line id="wsp-19" x1="191.70" y1="227.06" x2="65.17" y2="193.15" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="65.17" cy="193.15" r="2.6" fill="#34877C"/>
-<text id="wlbl-19" data-x="25.56" data-y="182.54" x="25.56" y="182.54" class="wlbl" text-anchor="middle" dominant-baseline="central">小雪</text>
-<line id="wsp-20" x1="196.70" y1="215.00" x2="83.25" y2="149.50" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="83.25" cy="149.50" r="2.6" fill="#34877C"/>
-<text id="wlbl-20" data-x="47.74" data-y="129.00" x="47.74" y="129.00" class="wlbl" text-anchor="middle" dominant-baseline="central">大雪</text>
-<line id="wsp-21" x1="204.64" y1="204.64" x2="112.01" y2="112.01" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="112.01" cy="112.01" r="2.6" fill="#34877C"/>
-<text id="wlbl-21" data-x="83.02" data-y="83.02" x="83.02" y="83.02" class="wlbl" text-anchor="middle" dominant-baseline="central">冬至</text>
-<line id="wsp-22" x1="215.00" y1="196.70" x2="149.50" y2="83.25" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="149.50" cy="83.25" r="2.6" fill="#34877C"/>
-<text id="wlbl-22" data-x="129.00" data-y="47.74" x="129.00" y="47.74" class="wlbl" text-anchor="middle" dominant-baseline="central">小寒</text>
-<line id="wsp-23" x1="227.06" y1="191.70" x2="193.15" y2="65.17" stroke="#34877C" stroke-width="1.2" opacity="0.62"/>
-<circle cx="193.15" cy="65.17" r="2.6" fill="#34877C"/>
-<text id="wlbl-23" data-x="182.54" data-y="25.56" x="182.54" y="25.56" class="wlbl" text-anchor="middle" dominant-baseline="central">大寒</text>
-<circle cx="240" cy="240" r="47" fill="#FBF8F0" stroke="#BE3D24" stroke-width="2.5"/>
-<circle cx="240" cy="240" r="39" fill="none" stroke="#BE3D24" stroke-width="1" opacity="0.4"/>
-<text x="240" y="228" class="hubsm" text-anchor="middle" dominant-baseline="central">出發 ⟳ 歸來</text>
-<text x="240" y="250" class="hubbig" text-anchor="middle" dominant-baseline="central">家</text>
-</svg></div>
-    <p class="wheel-cap">車 輪 即 節 氣 輪 · 家 為 輪 心</p>
-      <section class="season" style="--season:#5FA046">
-        <header class="season__head"><svg class="season__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V10"/><path d="M12 12C12 8.5 9 6 5.5 6.5 5.1 10 7.5 12.4 12 12"/><path d="M12 14c0-2.8 2.4-5 5.5-4.5.3 2.9-2 5-5.5 4.5"/></svg><span class="season__ch">春</span><span class="season__en">Spring</span><span class="season__rule"></span></header>
-        <div class="grid">
-        <article class="term" id="term-0">
-          <div class="term__head"><span class="term__name">立春</span><span class="term__date">2 / 4</span></div>
-          <p class="term__scene">春寒料峭，河風仍利，萬物將動。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">短程暖身 · 河濱緩騎</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">逞強遠征</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>午後微陽</p>
-          <p class="term__verse">輪未轉熱，先養腿力。</p>
-        </article>
-        <article class="term" id="term-1">
-          <div class="term__head"><span class="term__name">雨水</span><span class="term__date">2 / 19</span></div>
-          <p class="term__scene">細雨綿綿，路面常濕，木棉始綻街角。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">雨歇即出 · 市區慢遊</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">雨中急煞 · 下坡逞快</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>雨停初晴</p>
-          <p class="term__verse">濕路如薄冰，寧緩勿急。</p>
-        </article>
-        <article class="term" id="term-2">
-          <div class="term__head"><span class="term__name">驚蟄</span><span class="term__date">3 / 5</span></div>
-          <p class="term__scene">春雷乍響，蟄蟲始振，苦楝冒紫。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">解凍遠騎 · 訪春之庭園</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">晨出未暖身</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>午後</p>
-          <p class="term__verse">身已解凍，心也該出門。</p>
-        </article>
-        <article class="term" id="term-3">
-          <div class="term__head"><span class="term__name">春分</span><span class="term__date">3 / 20</span></div>
-          <p class="term__scene">晝夜均分，風溫日暖。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">全日長程 · 結伴同行</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">此格無忌</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>整日</p>
-          <p class="term__verse">晝夜各半，正好把路騎成一條中庸。</p>
-        </article>
-        <article class="term" id="term-4">
-          <div class="term__head"><span class="term__name">清明</span><span class="term__date">4 / 4</span></div>
-          <p class="term__scene">天清氣明，梅雨未至，一年最穩。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">多日縱走 · 訪古道兼掃墓</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">辜負這片晴好</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>整日</p>
-          <p class="term__verse">此時不縱走，更待何時。</p>
-        </article>
-        <article class="term" id="term-5">
-          <div class="term__head"><span class="term__name">穀雨</span><span class="term__date">4 / 20</span></div>
-          <p class="term__scene">雨生百穀，油桐落如五月雪。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">山區賞桐 · 雨前搶騎</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">輕忽午後雷陣</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>上午</p>
-          <p class="term__verse">把握梅雨前最後的乾爽。</p>
-        </article>
-        </div>
-      </section>
-      <section class="season" style="--season:#CE8418">
-        <header class="season__head"><svg class="season__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.3"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9"/></svg><span class="season__ch">夏</span><span class="season__en">Summer</span><span class="season__rule"></span></header>
-        <div class="grid">
-        <article class="term" id="term-6">
-          <div class="term__head"><span class="term__name">立夏</span><span class="term__date">5 / 5</span></div>
-          <p class="term__scene">暑氣初起，入梅在即。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">清晨出行 · 隨身備雨</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">正午曝騎</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>破曉</p>
-          <p class="term__verse">夏門已開，與雨賽跑的季節到了。</p>
-        </article>
-        <article class="term" id="term-7">
-          <div class="term__head"><span class="term__name">小滿</span><span class="term__date">5 / 21</span></div>
-          <p class="term__scene">梅雨綿延，溪水漸漲。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">雨窗短騎 · 河濱看水</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">低地溪畔 · 雷雨將至</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>雨歇之間</p>
-          <p class="term__verse">水未滿則騎，水將滿則歸。</p>
-        </article>
-        <article class="term" id="term-8">
-          <div class="term__head"><span class="term__name">芒種</span><span class="term__date">6 / 6</span></div>
-          <p class="term__scene">鳳凰始燃於路口，梅雨將盡。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">晨昏兩頭騎 · 賞鳳凰木</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">正午堤頂</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>清晨與黃昏</p>
-          <p class="term__verse">日頭毒了，騎乘往兩頭退。</p>
-        </article>
-        <article class="term" id="term-9">
-          <div class="term__head"><span class="term__name">夏至</span><span class="term__date">6 / 21</span></div>
-          <p class="term__scene">白晝最長，暑氣方盛。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">極早出行 · 善用長日</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">午後曝曬</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>天未亮</p>
-          <p class="term__verse">日最長，影最短，人要躲著太陽走。</p>
-        </article>
-        <article class="term" id="term-10">
-          <div class="term__head"><span class="term__name">小暑</span><span class="term__date">7 / 7</span></div>
-          <p class="term__scene">颱風季啟，溽暑悶熱。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">盯緊颱風 · 把握晴窗</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">風雨將至仍出</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>清晨</p>
-          <p class="term__verse">看天色，更要看氣象。</p>
-        </article>
-        <article class="term" id="term-11">
-          <div class="term__head"><span class="term__name">大暑</span><span class="term__date">7 / 22</span></div>
-          <p class="term__scene">一年最熱，平地如灶。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">破曉出門 · 上山避暑（武嶺、中橫）</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">平地正午</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>日出前</p>
-          <p class="term__verse">平地如灶，把車騎上山去。</p>
-        </article>
-        </div>
-      </section>
-      <section class="season" style="--season:#BE5027">
-        <header class="season__head"><svg class="season__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16Z"/><path d="M4 20 13.5 10.5"/></svg><span class="season__ch">秋</span><span class="season__en">Autumn</span><span class="season__rule"></span></header>
-        <div class="grid">
-        <article class="term" id="term-12">
-          <div class="term__head"><span class="term__name">立秋</span><span class="term__date">8 / 7</span></div>
-          <p class="term__scene">暑未消，颱風正盛。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">颱風空檔 · 傍晚乘涼</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">颱前颱後近溪</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>傍晚</p>
-          <p class="term__verse">秋字雖立，暑與颱猶在。</p>
-        </article>
-        <article class="term" id="term-13">
-          <div class="term__head"><span class="term__name">處暑</span><span class="term__date">8 / 23</span></div>
-          <p class="term__scene">暑氣將止，晚風初涼。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">黃昏騎乘 · 河濱納涼</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">輕信秋涼而曝曬</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>日落前後</p>
-          <p class="term__verse">暑氣退場，涼意排隊進來。</p>
-        </article>
-        <article class="term" id="term-14">
-          <div class="term__head"><span class="term__name">白露</span><span class="term__date">9 / 7</span></div>
-          <p class="term__scene">河面始霧，呼吸見白。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">晨霧河濱 · 添薄長袖</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">薄衫貪涼</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>清晨</p>
-          <p class="term__verse">露白了，該為手臂添一層。</p>
-        </article>
-        <article class="term" id="term-15">
-          <div class="term__head"><span class="term__name">秋分</span><span class="term__date">9 / 23</span></div>
-          <p class="term__scene">晝夜再均，季風前的黃金窗。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">長程縱走 · 結伴遠行</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">錯過這片清朗</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>整日</p>
-          <p class="term__verse">風起之前，把遠路騎個夠。</p>
-        </article>
-        <article class="term" id="term-16">
-          <div class="term__head"><span class="term__name">寒露</span><span class="term__date">10 / 8</span></div>
-          <p class="term__scene">東北季風初臨，轉涼起風。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">背風路線 · 向陽而行</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">迎風硬騎</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>午後向陽</p>
-          <p class="term__verse">風從東北來，路就往背風選。</p>
-        </article>
-        <article class="term" id="term-17">
-          <div class="term__head"><span class="term__name">霜降</span><span class="term__date">10 / 23</span></div>
-          <p class="term__scene">北風漸勁，氣溫下探。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">正午暖時 · 添件風衣</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">清晨迎風</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午</p>
-          <p class="term__verse">風利了，挑暖的時辰騎。</p>
-        </article>
-        </div>
-      </section>
-      <section class="season" style="--season:#34877C">
-        <header class="season__head"><svg class="season__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5 4.2 16.5"/><path d="M9.2 4.7 12 6l2.8-1.3M9.2 19.3 12 18l2.8 1.3"/></svg><span class="season__ch">冬</span><span class="season__en">Winter</span><span class="season__rule"></span></header>
-        <div class="grid">
-        <article class="term" id="term-18">
-          <div class="term__head"><span class="term__name">立冬</span><span class="term__date">11 / 7</span></div>
-          <p class="term__scene">季風穩定，台北濕冷。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">晴日把握 · 保暖層疊</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">濕冷迎風遠征</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午晴時</p>
-          <p class="term__verse">冬門已掩，騎乘趁晴。</p>
-        </article>
-        <article class="term" id="term-19">
-          <div class="term__head"><span class="term__name">小雪</span><span class="term__date">11 / 22</span></div>
-          <p class="term__scene">北地飄雪，在台只是濕涼。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">向陽河段 · 短程暖身</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">陰雨迎風</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>午後</p>
-          <p class="term__verse">此地無雪，只有濕與風。</p>
-        </article>
-        <article class="term" id="term-20">
-          <div class="term__head"><span class="term__name">大雪</span><span class="term__date">12 / 7</span></div>
-          <p class="term__scene">名為大雪，在台不過冬雨。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">晴窗短騎 · 溫熱收尾</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">貪遠受寒</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午</p>
-          <p class="term__verse">名與實之間，正是台灣的趣味。</p>
-        </article>
-        <article class="term" id="term-21">
-          <div class="term__head"><span class="term__name">冬至</span><span class="term__date">12 / 22</span></div>
-          <p class="term__scene">白晝最短，與光賽跑。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">短程早歸 · 湯圓暖身</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">摸黑遠歸</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午前後</p>
-          <p class="term__verse">日最短，早歸早暖。</p>
-        </article>
-        <article class="term" id="term-22">
-          <div class="term__head"><span class="term__name">小寒</span><span class="term__date">1 / 5</span></div>
-          <p class="term__scene">漸入嚴寒（台灣式）。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">南向追陽 · 台東暖騎</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">寒流迎風</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午</p>
-          <p class="term__verse">北邊冷了，車頭就往南偏。</p>
-        </article>
-        <article class="term" id="term-23">
-          <div class="term__head"><span class="term__name">大寒</span><span class="term__date">1 / 20</span></div>
-          <p class="term__scene">一年最冷，然台灣猶可騎。</p>
-          <div class="yiji">
-            <div class="row row--yi"><span class="seal seal--yi">宜</span><span class="row__txt">南部逐暖 · 台東追陽</span></div>
-            <div class="row row--ji"><span class="seal seal--ji">忌</span><span class="row__txt">寒流高地</span></div>
-          </div>
-          <p class="term__hour"><span class="hour__k">吉時</span>正午</p>
-          <p class="term__verse">最冷一格，也是輪將轉回春天的前夜。</p>
-        </article>
-        </div>
-      </section>
 
     <footer class="colophon">
       <b>基地分析工作站</b> · 單車騎行農民曆（路線天時 + 節氣）原型<br>
@@ -816,11 +464,6 @@ function renderToday(){
         <span class="t"><span class="sd" style="background:var(--ink)">忌</span>${tt.ji.join(" · ")}</span>
       </div>
     </div>`;
-  // highlight on wheel
-  document.querySelectorAll('.wlbl.today').forEach(e=>e.classList.remove('today'));
-  const lbl=document.getElementById('wlbl-'+ti); if(lbl) lbl.classList.add('today');
-  document.querySelectorAll('.term.today').forEach(e=>e.classList.remove('today'));
-  const card=document.getElementById('term-'+ti); if(card) card.classList.add('today');
   return tt;
 }
 
@@ -882,10 +525,11 @@ function renderRoute(){
       let gradeHtml="";
       if(S.bands){
         head += ` · 均坡 ${S.avgG}% · 最陡 ${S.maxG}%`;
-        const B=S.bands, lbl={flat:"平",gentle:"緩",steep:"陡",vsteep:"很陡",extreme:"極陡"},
+        const B=S.bands, lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡"},
               col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318"};
-        gradeHtml='<div class="grade-chips">'+Object.keys(B).filter(k=>B[k]>=3)
-          .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${B[k]}%</span>`).join("")+'</div>';
+        const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
+        gradeHtml='<div class="grade-chips"><span class="gk">坡度組成</span>'+Object.keys(B).filter(k=>B[k]>=100)
+          .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
       }
       const cvId="cv"+i;
       const stepsHtml = S.steps && S.steps.length
@@ -1017,8 +661,7 @@ function summarizeGrades(gr){
   s.forEach(x=>{ const L=x.d1-x.d0, g=Math.abs(x.g);
     if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
     else if(g<=12)bands.vsteep+=L; else bands.extreme+=L; });
-  const T=gr.total; Object.keys(bands).forEach(k=>bands[k]=Math.round(bands[k]/T*100));
-  return {maxG:Math.round(maxG*10)/10, avgG:Math.round(avgG*10)/10, bands};
+  return {maxG:Math.round(maxG*10)/10, avgG:Math.round(avgG*10)/10, bands}; // bands 為公尺
 }
 
 async function routeSegment(a,b){
@@ -1316,15 +959,6 @@ wpInput.addEventListener('keydown', e=>{
   else if(e.key==='Escape'){ hideSuggest(); }
 });
 document.addEventListener('click', e=>{ if(!e.target.closest('.combo')) hideSuggest(); });
-
-// ----- hot-spot chips add gazetteer waypoints directly -----
-const HOT=["大稻埕碼頭","大佳河濱公園","關渡金色水岸","八里左岸","淡水金色水岸","新店碧潭","日月潭環潭","武嶺"];
-const chipsEl=document.getElementById('chips');
-HOT.forEach(h=>{
-  const b=document.createElement('button'); b.className="chip"; b.textContent=h;
-  b.addEventListener('click',()=>{ const g=GAZ.find(x=>x.n===h||x.a.includes(h)); if(g) addWaypoint(wpFromGaz(g)); });
-  chipsEl.appendChild(b);
-});
 
 // ----- controls -----
 document.getElementById('clearBtn').addEventListener('click',()=>{ WAYPOINTS=[]; renderWaypoints(); ROUTE=[]; renderRoute(); });
