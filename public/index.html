@@ -111,6 +111,8 @@
   .steps-list{margin:8px 0 0; padding:0 0 0 4px; list-style:none; font-size:12.5px; color:var(--body); line-height:1.8}
   .steps-list li{border-left:2px solid var(--line); padding-left:10px; margin-bottom:2px}
   .seg-est{color:var(--warn); font-size:11.5px}
+  .mainclimb{color:var(--pine); font-weight:600}
+  .mainclimb.hard{color:var(--risk)}
   .grade-warn{margin-top:7px; padding:7px 11px; font-size:12.5px; color:var(--risk); line-height:1.6;
     background:color-mix(in srgb,var(--risk) 7%, transparent);
     border:1px dashed color-mix(in srgb,var(--risk) 40%, transparent); border-radius:5px}
@@ -326,7 +328,7 @@
     </div>
 
     <footer class="colophon">
-      <b>單車騎行農民曆</b> · 版本 <b>v1.6</b>（2026-07-05）<br>
+      <b>單車騎行農民曆</b> · 版本 <b>v1.7</b>（2026-07-05）<br>
       © 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>
       路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>
       路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路15・緩坡11・陡坡8.5・很陡6.5・極陡5・下坡24 km/h）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
@@ -643,7 +645,19 @@ function renderRoute(){
           +["flat","gentle","steep","vsteep","extreme","down","downS"]
           .filter(k=>B[k]>=100)
           .map(k=>`<span class="gchip" style="background:${col[k]}" title="${tip[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
-        if(S.maxG>=10) gradeWarn=`<div class="grade-warn">⚠ 陡坡提醒：本段有連續 300 公尺達 <b>${S.maxG}%</b> 的爬坡，宜預留體力、提早降檔${S.bands.downS>=300?"；下坡段請控制車速":""}</div>`;
+        const MC=S.mainClimb;
+        if(MC && MC.gain>=60){
+          const hard = MC.avg>=8 || MC.gain>=250;
+          head += ` · <span class="mainclimb${hard?' hard':''}">主爬坡 ${(MC.len/1000).toFixed(1)} km ↑${Math.round(MC.gain)}m（均 ${MC.avg.toFixed(1)}%）</span>`;
+        }
+        if(S.maxG>=10 || (MC && MC.avg>=9 && MC.gain>=150))
+          gradeWarn=`<div class="grade-warn">⚠ 陡坡提醒：${MC&&MC.avg>=9&&MC.gain>=150?`主爬坡 ${(MC.len/1000).toFixed(1)} 公里平均 <b>${MC.avg.toFixed(1)}%</b>（爬升 ${Math.round(MC.gain)}m）`:""}${S.maxG>=10?`${MC&&MC.avg>=9&&MC.gain>=150?"；":""}連續 300 公尺最陡達 <b>${S.maxG}%</b>`:""}，宜預留體力、提早降檔${S.bands.downS>=300?"；下坡段請控制車速":""}</div>`;
+      }
+      // 路網終點與目的地高程落差（如桃源谷：可騎道路盡頭之後為步道）
+      if(!S.est && S.grades && r.pt && isFinite(r.pt.elev)){
+        const endEle=S.grades.profile[S.grades.profile.length-1].e;
+        const gap=r.pt.elev-endEle;
+        if(gap>60) head += ` <span class="seg-est">路網可騎至約 ${Math.round(endEle)}m；至${r.pt.n}尚有 ~${Math.round(gap)}m 爬升屬步道／扛車段</span>`;
       }
       const cvId="cv"+i;
       const stepsHtml = S.steps && S.steps.length
@@ -799,7 +813,21 @@ function gradesFromGeom(geom, repairs){
     const d1=Math.min(total,d0+win);
     out.push({d0,d1,g:(eleAt(d1)-eleAt(d0))/Math.max(1,d1-d0)*100});
   }
-  // 4) 最陡＝連續 300m 的最大平均「爬」坡；比例檢定：
+  // 3.5) 爬坡區塊：連續爬升區段（樣本坡>1%，容許 ≤200m 的緩/降併入），主爬坡＝爬升量最大者
+  const blocks=[]; let bk=null, slack=0;
+  out.forEach(s=>{
+    if(s.g>1){ if(!bk) bk={d0:s.d0,d1:s.d1}; else bk.d1=s.d1; slack=0; }
+    else if(bk){ slack+=s.d1-s.d0; if(slack>200){ blocks.push(bk); bk=null; } else bk.d1=s.d1; }
+  });
+  if(bk) blocks.push(bk);
+  const blockInfo=blocks.map(b=>{
+    const gain=eleAt(b.d1)-eleAt(b.d0), len=b.d1-b.d0;
+    return {d0:b.d0,d1:b.d1,len,gain,avg:gain/Math.max(1,len)*100};
+  }).filter(b=>b.gain>=30);
+  const mainClimb = blockInfo.length ? blockInfo.reduce((a,b)=>b.gain>a.gain?b:a) : null;
+  const blockAt = d => blockInfo.find(b=>d>=b.d0-50 && d<=b.d1+50);
+
+  // 4) 最陡＝連續 300m 的最大平均「爬」坡；比例檢定＋區塊背書：
   //    視窗坡度不得超過「前後外推 250m 的脈絡平均坡 × 2.2 ＋ 3 個百分點」。
   //    真實陡爬的脈絡本身就陡（天花板遠高於自身）；孤立凸包的脈絡只剩基礎坡，撐不起自己，出局。
   let maxEligible=0, maxPlain=0; const elig=[];
@@ -814,7 +842,9 @@ function gradesFromGeom(geom, repairs){
     };
     const cA=ctxG(250), cB=ctxG(500);           // 兩種尺度取較小：寬凸包無法用自身墊高天花板
     const gctx=Math.min(cA.g, cB.g);
-    elig.push((g>0 && cA.net>=15 && g<=2.2*Math.max(0,gctx)+3) ? g : 0);
+    const blk=blockAt((d0+d1)/2);               // 區塊背書：零星陡窗須被所在爬坡區塊的均坡撐起
+    const backed = blk && blk.avg >= 0.45*g;
+    elig.push((g>0 && cA.net>=15 && g<=2.2*Math.max(0,gctx)+3 && backed) ? g : 0);
   }
   // 相鄰視窗一致性：報告值＝min(自身, 相鄰兩窗較大者)——孤立鋸齒（DEM 切過髮夾彎）自然塌陷，
   // 真正持續的陡爬前後視窗同樣陡，不受影響
@@ -835,7 +865,7 @@ function gradesFromGeom(geom, repairs){
   for(let i=1;i<sm.length;i++){const dE=sm[i].e-sm[i-1].e;
     if(dE>0.3)up+=dE; else if(dE<-0.3)down-=dE;}
   return {samples:out, total, profile:sm, up:Math.round(up), down:Math.round(down),
-          maxSus:Math.round(maxSus*10)/10, noisy, artifact, repaired};
+          maxSus:Math.round(maxSus*10)/10, noisy, artifact, repaired, mainClimb};
 }
 
 function summarizeGrades(gr){
@@ -848,7 +878,8 @@ function summarizeGrades(gr){
     if(g<=-8)bands.downS+=L; else if(g<-2)bands.down+=L;
     else if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
     else if(g<=12)bands.vsteep+=L; else bands.extreme+=L; });
-  return {maxG:gr.maxSus, avgG:Math.round(avgG*10)/10, bands, noisy:gr.noisy, artifact:gr.artifact}; // bands 為公尺
+  return {maxG:gr.maxSus, avgG:Math.round(avgG*10)/10, bands, noisy:gr.noisy, artifact:gr.artifact,
+          mainClimb:gr.mainClimb}; // bands 為公尺
 }
 
 async function routeSegment(a,b){
@@ -1237,7 +1268,7 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("單車騎行農民曆 v1.6 (2026-07-05)");
+console.log("單車騎行農民曆 v1.7 (2026-07-05)");
 renderWaypoints();
 renderToday();
 analyze();
