@@ -111,6 +111,11 @@
   .steps-list{margin:8px 0 0; padding:0 0 0 4px; list-style:none; font-size:12.5px; color:var(--body); line-height:1.8}
   .steps-list li{border-left:2px solid var(--line); padding-left:10px; margin-bottom:2px}
   .seg-est{color:var(--warn); font-size:11.5px}
+  .grade-warn{margin-top:7px; padding:7px 11px; font-size:12.5px; color:var(--risk); line-height:1.6;
+    background:color-mix(in srgb,var(--risk) 7%, transparent);
+    border:1px dashed color-mix(in srgb,var(--risk) 40%, transparent); border-radius:5px}
+  .legend--bands{margin-top:8px}
+  .bands-k{letter-spacing:.06em; color:var(--body)}
 
   .controls{display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; margin:16px 0 0; padding-top:16px; border-top:1px dashed var(--line)}
   .ctl-group{display:flex; align-items:center; gap:8px}
@@ -288,6 +293,16 @@
       <span><i style="background:var(--warn)"></i>留意</span>
       <span><i style="background:var(--risk)"></i>審慎</span>
       <span>頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退</span>
+    </div>
+    <div class="legend legend--bands">
+      <span class="bands-k">坡度分級（每前進 100 公尺的高度變化）</span>
+      <span><i style="background:#5FA046"></i>平路 ±2%</span>
+      <span><i style="background:#B08A3E"></i>緩坡 2–5%</span>
+      <span><i style="background:#CE8418"></i>陡坡 5–8%</span>
+      <span><i style="background:#BE5027"></i>很陡 8–12%</span>
+      <span><i style="background:#8C2318"></i>極陡 逾12%</span>
+      <span><i style="background:#8FA0B5"></i>下坡 −2〜−8%</span>
+      <span><i style="background:#4A6076"></i>陡降 低於−8%</span>
     </div>
 
     <footer class="colophon">
@@ -488,6 +503,7 @@ function build(){
     if(w.temp>=33)score+=1;
     if(w.temp<=8)score+=1;                       // cold exposure (alpine mornings)
     if(wind&&wind.kind==="head"&&wind.spd>=18)score+=1;
+    if(seg&&seg.maxG!=null){ if(seg.maxG>=15)score+=2; else if(seg.maxG>=10)score+=1; }
     if(pts[i].esc.hard)score+=1;
     const tier=score>=4?"risk":score>=2?"warn":"good";
     rows.push({pt:pts[i],seg,arrMin,w,wind,tier,score});
@@ -541,7 +557,9 @@ function renderRoute(){
   const implausible = hasGeo && ROUTE.length>1 && straight/(ROUTE.length-1) > 40;
 
   let sent=`${worst.pt.n}於 <b>${fmtD(worst.arrMin)}</b> 抵達，正逢${cond(worst.w.rain)}（降雨 ${worst.w.rain}%）、UV ${worst.w.uv}、氣溫 ${worst.w.temp}°`
-         +(worst.wind?`、${worst.wind.label} ${worst.wind.spd} km/h`:"")+`，為全程最具挑戰的一段。`;
+         +(worst.wind?`、${worst.wind.label} ${worst.wind.spd} km/h`:"")
+         +((worst.seg&&worst.seg.maxG>=10)?`，且抵達前路段最陡 ${worst.seg.maxG}%`:"")
+         +`，為全程最具挑戰的一段。`;
   const headTxt=heads.length?heads.map(r=>r.pt.n).join("、")+" 頂風":"全程無明顯逆風";
   let rec;
   if(worst.tier==="risk"){
@@ -574,24 +592,31 @@ function renderRoute(){
         + (r.wind?` · ${r.wind.label} ${r.wind.spd}`:"")
         + (S.est?` · <span class="seg-est">直線推估</span>`:"");
       let gradeHtml="";
+      let gradeWarn="";
       if(S.bands){
-        head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${S.maxG}%`
+        const mg = S.maxG>=10 ? `<b style="color:var(--risk)">${S.maxG}%</b>` : `${S.maxG}%`;
+        head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${mg}`
               + (S.artifact?` <span class="seg-est">已濾除疑似隧道／峽谷之高程假訊</span>`:"")
               + (S.noisy?` <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>`:"");
         const B=S.bands,
               lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡",down:"下坡",downS:"陡降"},
-              col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318",down:"#8FA0B5",downS:"#4A6076"};
+              col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318",down:"#8FA0B5",downS:"#4A6076"},
+              tip={flat:"平路：坡度 ±2% 以內",gentle:"緩坡：爬坡 2–5%",steep:"陡坡：爬坡 5–8%",
+                   vsteep:"很陡：爬坡 8–12%",extreme:"極陡：爬坡逾 12%",
+                   down:"下坡：−2% 〜 −8%",downS:"陡降：坡度低於 −8%"};
         const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
-        gradeHtml='<div class="grade-chips"><span class="gk">坡度組成</span>'+["flat","gentle","steep","vsteep","extreme","down","downS"]
+        gradeHtml='<div class="grade-chips"><span class="gk" title="坡度＝每前進100公尺的高度變化比例">坡度組成</span>'
+          +["flat","gentle","steep","vsteep","extreme","down","downS"]
           .filter(k=>B[k]>=100)
-          .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
+          .map(k=>`<span class="gchip" style="background:${col[k]}" title="${tip[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
+        if(S.maxG>=10) gradeWarn=`<div class="grade-warn">⚠ 陡坡提醒：本段有連續 300 公尺達 <b>${S.maxG}%</b> 的爬坡，宜預留體力、提早降檔${S.bands.downS>=300?"；下坡段請控制車速":""}</div>`;
       }
       const cvId="cv"+i;
       const stepsHtml = S.steps && S.steps.length
         ? `<button class="steps-tg" data-tg="st${i}">逐步指示（${S.steps.length}）</button>
            <ul class="steps-list" id="st${i}" hidden>${S.steps.map(s=>`<li>${s.instruction}${s.distance?` <span style="color:var(--muted)">· ${s.distance>=1000?(s.distance/1000).toFixed(1)+" km":s.distance+" m"}</span>`:""}</li>`).join("")}</ul>`
         : "";
-      seg.innerHTML=`<div class="tseg__inner">${head}${gradeHtml}`
+      seg.innerHTML=`<div class="tseg__inner">${head}${gradeHtml}${gradeWarn}`
         + (S.grades?`<canvas class="elevcv" id="${cvId}"></canvas>`:"")
         + stepsHtml + `</div>`;
       tl.appendChild(seg);
@@ -726,15 +751,22 @@ function gradesFromGeom(geom){
     const d1=Math.min(total,d0+win);
     out.push({d0,d1,g:(eleAt(d1)-eleAt(d0))/Math.max(1,d1-d0)*100});
   }
-  // 4) 最陡＝連續 300m 的最大平均「爬」坡，且須位於持續爬升的脈絡中
-  //    （前後各外推 250m 的淨爬升 ≥15m 才計入；孤立的凸包＝隧道上方山體／峽谷壁假訊，排除）
+  // 4) 最陡＝連續 300m 的最大平均「爬」坡；比例檢定：
+  //    視窗坡度不得超過「前後外推 250m 的脈絡平均坡 × 2.2 ＋ 3 個百分點」。
+  //    真實陡爬的脈絡本身就陡（天花板遠高於自身）；孤立凸包的脈絡只剩基礎坡，撐不起自己，出局。
   let maxEligible=0, maxPlain=0;
   for(let d0=0; d0+300<=total || d0===0; d0+=100){
     const d1=Math.min(total,d0+300); if(d1-d0<150) break;
     const g=(eleAt(d1)-eleAt(d0))/(d1-d0)*100;
     if(g>maxPlain) maxPlain=g;
-    const net=eleAt(Math.min(total,d1+250))-eleAt(Math.max(0,d0-250));
-    if(net>=15 && g>maxEligible) maxEligible=g;
+    const ctxG=(ext)=>{
+      const c0=Math.max(0,d0-ext), c1=Math.min(total,d1+ext);
+      const n=eleAt(c1)-eleAt(c0);
+      return {net:n, g:n/Math.max(1,c1-c0)*100};
+    };
+    const cA=ctxG(250), cB=ctxG(500);           // 兩種尺度取較小：寬凸包無法用自身墊高天花板
+    const gctx=Math.min(cA.g, cB.g);
+    if(g>0 && cA.net>=15 && g<=2.2*Math.max(0,gctx)+3 && g>maxEligible) maxEligible=g;
   }
   if(maxEligible===0){   // 全程無持續爬升：用正坡樣本的 90 百分位當代表值
     const pos=out.filter(x=>x.g>0).map(x=>x.g).sort((a,b)=>a-b);
