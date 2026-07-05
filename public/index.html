@@ -306,7 +306,7 @@
     </div>
 
     <footer class="colophon">
-      <b>基地分析工作站</b> · 單車騎行農民曆（路線天時 + 節氣）原型<br>
+      <b>單車騎行農民曆</b> · 版本 <b>v1.4</b>（2026-07-05）<br>
       路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依配速 15 km/h 與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
       地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。
     </footer>
@@ -596,6 +596,7 @@ function renderRoute(){
       if(S.bands){
         const mg = S.maxG>=10 ? `<b style="color:var(--risk)">${S.maxG}%</b>` : `${S.maxG}%`;
         head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${mg}`
+              + (S.grades&&S.grades.repaired?` <span class="seg-est">已依路名修正 ${S.grades.repaired} 段隧道／橋樑高程</span>`:"")
               + (S.artifact?` <span class="seg-est">已濾除疑似隧道／峽谷之高程假訊</span>`:"")
               + (S.noisy?` <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>`:"");
         const B=S.bands,
@@ -705,8 +706,9 @@ function estSegment(a,b){
            maxG:null, avgG:null, bands:null };
 }
 
-function gradesFromGeom(geom){
+function gradesFromGeom(geom, repairs){
   // geom: [[lng,lat,ele],...] → 去尖刺、重取樣、平滑後的坡度分析
+  // repairs: [{a,b,why}]（公尺）— 依路名辨識的隧道/橋樑區間，直接以兩端線性內插取代（DEM 在此量到的是山體/谷底，非路面）
   if(!geom || geom.length<3) return null;
   const raw=[]; let cum=0;
   for(let i=0;i<geom.length;i++){
@@ -714,6 +716,17 @@ function gradesFromGeom(geom){
     raw.push({d:cum, e:geom[i][2]||0});
   }
   const total=cum; if(total<80) return null;
+  let repaired=0;
+  (repairs||[]).forEach(r=>{
+    const a=Math.max(0,Math.min(total,r.a)), b=Math.max(0,Math.min(total,r.b));
+    if(b-a<40) return;
+    const at=d=>{ let lo=0,hi=raw.length-1;
+      while(hi-lo>1){const m=(lo+hi)>>1;(raw[m].d<=d)?lo=m:hi=m;}
+      const p=raw[lo],q=raw[hi],f=(d-p.d)/Math.max(1e-6,q.d-p.d); return p.e+(q.e-p.e)*f; };
+    const eA=at(Math.max(0,a-15)), eB=at(Math.min(total,b+15));
+    raw.forEach(p=>{ if(p.d>a&&p.d<b) p.e=eA+(eB-eA)*(p.d-a)/(b-a); });
+    repaired++;
+  });
   // 1) 去尖刺：距離式中位數濾波（±100m 內取中位，處理副本），可吃掉寬達 ~200m 的橋樑／峽谷壁假訊
   const med=(arr)=>{const s=[...arr].sort((a,b)=>a-b);return s[(s.length-1)>>1];};
   const cp=raw.map((p,i)=>{
@@ -780,7 +793,7 @@ function gradesFromGeom(geom){
   for(let i=1;i<sm.length;i++){const dE=sm[i].e-sm[i-1].e;
     if(dE>0.3)up+=dE; else if(dE<-0.3)down-=dE;}
   return {samples:out, total, profile:sm, up:Math.round(up), down:Math.round(down),
-          maxSus:Math.round(maxSus*10)/10, noisy, artifact};
+          maxSus:Math.round(maxSus*10)/10, noisy, artifact, repaired};
 }
 
 function summarizeGrades(gr){
@@ -803,7 +816,21 @@ async function routeSegment(a,b){
     if(!r.ok) return null;
     const j=await r.json();
     if(!j.geometry) return null;
-    const gr=gradesFromGeom(j.geometry);
+    let repairs=[];
+    if(j.steps && j.steps.length && j.geometry && j.geometry.length>2){
+      let rawLen=0;
+      for(let i=1;i<j.geometry.length;i++)
+        rawLen+=haversine({lat:j.geometry[i-1][1],lng:j.geometry[i-1][0]},{lat:j.geometry[i][1],lng:j.geometry[i][0]})*1000;
+      const stepTot=j.steps.reduce((a,s)=>a+(s.distance||0),0)||1;
+      const sc=rawLen/stepTot; let cum=0;
+      j.steps.forEach(s=>{
+        const d=s.distance||0, nm=s.name||"";
+        if(/隧道|地下道/.test(nm) || (/橋/.test(nm) && d>=150 && d<=2000))
+          repairs.push({a:cum*sc, b:(cum+d)*sc, why:nm});
+        cum+=d;
+      });
+    }
+    const gr=gradesFromGeom(j.geometry, repairs);
     const sum=summarizeGrades(gr);
     return { dist:(j.distance||0)/1000,
              up: gr? gr.up : (j.ascent||0),
@@ -1158,6 +1185,7 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
+console.log("單車騎行農民曆 v1.4 (2026-07-05)");
 renderWaypoints();
 renderToday();
 analyze();
