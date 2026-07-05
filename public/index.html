@@ -328,10 +328,10 @@
     </div>
 
     <footer class="colophon">
-      <b>單車騎行農民曆</b> · 版本 <b>v1.8</b>（2026-07-05）<br>
+      <b>單車騎行農民曆</b> · 版本 <b>v1.9</b>（2026-07-05）<br>
       © 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>
       路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>
-      路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16・緩坡10・陡坡7・很陡5.5・極陡4・下坡24 km/h，2026-07 實騎校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
+      路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16・緩坡10・陡坡8.3・很陡6.5・極陡4.5・下坡25.5・陡降23.7 km/h，2024–2026 Komoot 834 趟完騎校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
       地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。
     </footer>
   </div>
@@ -407,9 +407,10 @@ function bearing(a,b){
 }
 function angDiff(a,b){ let d=Math.abs(a-b)%360; return d>180?360-d:d; }
 const DETOUR=1.3, ROLL=6, SPEED=15, CLIMB=0.06;
-// 坡度分段配速（km/h）：依 2026-07-03 動物園→桃源谷實騎校準
-// 實測：平路16.2 · 緩坡10.1 · 陡坡7.1 · 很陡5.8 · 極陡4.1（含推行） · 下坡24.6
-function paceKmh(g){ return g<=-2?24 : g<=2?16 : g<=5?10 : g<=8?7 : g<=12?5.5 : 4; }
+// 坡度分段配速（km/h）：v1.9 依 Komoot 2024–2026 全庫 834 趟完騎校準（近24月距離加權中位數）
+// 採用：陡降23.7（首次獨立校準，93km）· 下坡25.5 · 陡坡8.3 · 很陡6.5 · 極陡4.5（樣本受污染，取保守值）
+// 平路/緩坡暫留 v1.8 實騎值 16/10：全庫中位數 18.7/13.3 屬「巡航速度」統計，對 ETA 系統性偏快，待有效速度（Σkm/Σh）覆核後再採
+function paceKmh(g){ return g<=-8?23.7 : g<-2?25.5 : g<=2?16 : g<=5?10 : g<=8?8.3 : g<=12?6.5 : 4.5; }
 function segMinutes(seg){
   if(seg.grades && seg.grades.samples.length){
     let min=0;
@@ -1269,7 +1270,7 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("單車騎行農民曆 v1.8 (2026-07-05)");
+console.log("單車騎行農民曆 v1.9 (2026-07-05) · Komoot 834趟校準");
 renderWaypoints();
 renderToday();
 analyze();
