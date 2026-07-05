@@ -272,7 +272,7 @@
         <div class="ctl-group"><span class="ctl-label">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label">分</span></div>
         <div class="ctl-group"><button class="toggle" id="revBtn">反轉方向 ⇄</button></div>
       </div>
-      <p class="note-live">天氣為<strong>示範情境</strong>（依季節與地形估算），路徑／坡度／撤退依真實路網計算（需 API 金鑰）；天氣為示範情境，CWA 逐時預報為下一步</p>
+      <p class="note-live">路徑／坡度／撤退依真實路網計算；天氣接 CWA 鄉鎮逐3小時預報（未設金鑰或超出預報範圍時退 Open-Meteo／示範情境，來源如實標示）</p>
     </div>
 
     <div class="verdict" id="verdict"></div>
@@ -374,7 +374,7 @@ function lerp(pts,h){
   for(let i=0;i<pts.length-1;i++){const[h0,v0]=pts[i],[h1,v1]=pts[i+1];if(h>=h0&&h<=h1)return v0+(v1-v0)*(h-h0)/(h1-h0);}
   return pts[pts.length-1][1];
 }
-function wx(wz, elev, hour){
+function wxSim(wz, elev, hour){
   elev = elev || 0;
   const h=hour;
   let temp = lerp([[5,25],[8,28],[11,31],[14,33],[16,32],[18,30]],h) - elev/1000*6.5;
@@ -400,6 +400,57 @@ function wx(wz, elev, hour){
 }
 function cond(r){ return r>=60?"雷陣雨":r>=45?"陣雨機率高":r>=28?"多雲時陰":"多雲到晴"; }
 
+// ---------- live weather (CWA via /api/weather, Open-Meteo fallback) ----------
+let WXMAP=new Map(), WXSRC="示範情境";
+const wxKey=p=>p.lat.toFixed(3)+","+p.lng.toFixed(3);
+async function fetchWeather(){
+  WXMAP=new Map(); WXSRC="示範情境";
+  const pts=ROUTE.slice(0,12);
+  if(!pts.length) return;
+  try{
+    const r=await fetch(API('/api/weather'),{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({points:pts.map(p=>({lat:p.lat,lng:p.lng}))})});
+    if(!r.ok) return;
+    const j=await r.json();
+    (j.points||[]).forEach((rec,i)=>{
+      if(rec && rec.hourly && rec.hourly.time && rec.hourly.time.length) WXMAP.set(wxKey(pts[i]),rec);
+    });
+    const first=(j.points||[]).find(x=>x&&x.source&&x.source!=="none");
+    if(first) WXSRC = first.source==="cwa" ? `CWA 鄉鎮逐3小時（${first.label||""}等）`
+             : first.source==="open-meteo" ? "Open-Meteo（CWA 備援）" : "示範情境";
+  }catch(e){}
+}
+function interp(times, vals, ms, circular){
+  if(!vals) return null;
+  let i=0; while(i<times.length-1 && times[i+1]<=ms) i++;
+  const a=vals[i], b=vals[Math.min(i+1,vals.length-1)];
+  if(a==null&&b==null) return null;
+  if(a==null) return b; if(b==null) return a;
+  const t0=times[i], t1=times[Math.min(i+1,times.length-1)];
+  const f=t1>t0 ? Math.min(1,Math.max(0,(ms-t0)/(t1-t0))) : 0;
+  if(circular) return f<0.5?a:b;
+  return a+(b-a)*f;
+}
+function wx(pt, hour){
+  const rec=WXMAP.get(wxKey(pt));
+  const sim=wxSim(pt.wz, pt.elev, ((hour%24)+24)%24);
+  if(!rec) return sim;
+  const base=new Date(); base.setHours(0,0,0,0);
+  const ms=base.getTime()+hour*3600*1000;
+  const H=rec.hourly, T=H.time;
+  if(ms<T[0]-3*3600e3 || ms>T[T.length-1]+3*3600e3) return sim;   // 超出預報範圍
+  const temp=interp(T,H.temp,ms), pop=interp(T,H.pop,ms),
+        ws=interp(T,H.windSpd,ms), wd=interp(T,H.windDirDeg,ms,true),
+        uv=interp(T,H.uvi,ms);
+  return {
+    temp: temp!=null?Math.round(temp):sim.temp,
+    uv:   uv!=null?Math.max(0,Math.round(uv)):sim.uv,
+    rain: pop!=null?Math.round(pop):sim.rain,
+    windFrom: wd!=null?wd:sim.windFrom,
+    windSpd:  ws!=null?Math.round(ws):sim.windSpd,
+  };
+}
+
 // ---------- today's solar term ----------
 function todayTerm(){
   const now=new Date(), ord=(now.getMonth()+1)*100+now.getDate();
@@ -422,7 +473,7 @@ function build(){
       t += seg.dist/SPEED*60 + seg.up*CLIMB;
     }
     const arrMin=t, hour=arrMin/60;
-    const w=wx(pts[i].wz, pts[i].elev, hour);
+    const w=wx(pts[i], hour);
     let wind=null;
     if(i>0){
       const br=bearing(pts[i-1],pts[i]);
@@ -480,7 +531,7 @@ function renderRoute(){
   let worst=rows[0]; rows.forEach(r=>{if(r.score>worst.score)worst=r;});
   const heads=rows.filter(r=>r.wind&&r.wind.kind==="head");
   const tier=worst.tier;
-  const statusText={good:"今日宜騎",warn:"可騎 · 留意時段",risk:"審慎 · 有高風險段"}[tier];
+  const statusText={good:"今日宜騎",warn:"可騎 · 留意時段",risk:"審慎 · 有挑戰路段"}[tier];
 
   const nameList=(REVERSED?[...ROUTE].reverse():ROUTE).map(p=>p.n);
   const totalKm=rows.reduce((s,r)=>s+(r.seg?r.seg.dist:0),0);
@@ -490,11 +541,11 @@ function renderRoute(){
   const implausible = hasGeo && ROUTE.length>1 && straight/(ROUTE.length-1) > 40;
 
   let sent=`${worst.pt.n}於 <b>${fmtD(worst.arrMin)}</b> 抵達，正逢${cond(worst.w.rain)}（降雨 ${worst.w.rain}%）、UV ${worst.w.uv}、氣溫 ${worst.w.temp}°`
-         +(worst.wind?`、${worst.wind.label} ${worst.wind.spd} km/h`:"")+`，為全程風險最高的一段。`;
+         +(worst.wind?`、${worst.wind.label} ${worst.wind.spd} km/h`:"")+`，為全程最具挑戰的一段。`;
   const headTxt=heads.length?heads.map(r=>r.pt.n).join("、")+" 頂風":"全程無明顯逆風";
   let rec;
   if(worst.tier==="risk"){
-    rec=`風險集中在 <b>${fmtD(worst.arrMin)} 的${worst.pt.n}</b>。可試著 <b>提早出發</b>、<b>縮短每點停留</b>，或 <b>反轉方向</b>，把高風險點的抵達時刻挪開午後對流。`;
+    rec=`挑戰集中在 <b>${fmtD(worst.arrMin)} 的${worst.pt.n}</b>。可試著 <b>提早出發</b>、<b>縮短每點停留</b>，或 <b>反轉方向</b>，把最具挑戰路段的抵達時刻挪開午後對流。`;
   } else {
     rec=`目前排程的節奏尚可；若要更保險，把暴露路段的抵達時刻壓在午前最穩妥。今日${tt.name}，${tt.verse}`;
   }
@@ -503,11 +554,11 @@ function renderRoute(){
   v.innerHTML=`
     ${implausible?'<p class="route-warn">⚠ 路線總距離偏大（約 '+totalKm.toFixed(0)+' km），可能有地名被定位到錯誤位置。請在可疑地名後加上縣市或鄰近大地標，再查一次。</p>':''}
     <p class="route-title">${nameList.join(" → ")}</p>
-    <p class="route-sub">${ROUTE.length} 點 · 約 ${totalKm.toFixed(0)} km · 估計爬升 ~${Math.round(totalUp/10)*10} m · 今日${tt.name}</p>
+    <p class="route-sub">${ROUTE.length} 點 · 約 ${totalKm.toFixed(0)} km · 爬升 ~${Math.round(totalUp/10)*10} m · 今日${tt.name} · 天氣：${WXSRC}</p>
     <div class="verdict__top"><span class="vdot"></span><span class="vstatus">${statusText}</span></div>
     <p class="vsent">${sent}</p>
     <div class="vgrid">
-      <div class="vcell"><p class="vcell__k">最糟時段 / 地點</p><p class="vcell__v">${fmtD(worst.arrMin)} · ${worst.pt.n}</p></div>
+      <div class="vcell"><p class="vcell__k">最具挑戰 時段/地點</p><p class="vcell__v">${fmtD(worst.arrMin)} · ${worst.pt.n}</p></div>
       <div class="vcell"><p class="vcell__k">風向</p><p class="vcell__v">${headTxt}</p></div>
       <div class="vcell"><p class="vcell__k">抵達終點</p><p class="vcell__v">${fmtD(rows[rows.length-1].arrMin)} · ${rows[rows.length-1].pt.n}</p></div>
     </div>
@@ -524,7 +575,8 @@ function renderRoute(){
         + (S.est?` · <span class="seg-est">直線推估</span>`:"");
       let gradeHtml="";
       if(S.bands){
-        head += ` · 均坡 ${S.avgG}% · 最陡 ${S.maxG}%`;
+        head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${S.maxG}%`
+              + (S.noisy?` <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>`:"");
         const B=S.bands, lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡"},
               col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318"};
         const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
@@ -587,6 +639,8 @@ async function analyze(){
   if(seq!==ANALYZE_SEQ) return;
   ROUTE=WAYPOINTS.slice();
   await routeAll();            if(seq!==ANALYZE_SEQ) return;
+  showLoading("取得逐時天氣中…");
+  await fetchWeather();        if(seq!==ANALYZE_SEQ) return;
   showLoading("計算各點撤退車站中…");
   await computeRetreats();     if(seq!==ANALYZE_SEQ) return;
   renderRoute();
@@ -624,44 +678,75 @@ function estSegment(a,b){
 }
 
 function gradesFromGeom(geom){
-  // geom: [[lng,lat,ele],...] → rolling ~100m gradient samples: [{d0,d1,g}]
+  // geom: [[lng,lat,ele],...] → 去尖刺、重取樣、平滑後的坡度分析
   if(!geom || geom.length<3) return null;
-  const pts=[]; let cum=0;
+  const raw=[]; let cum=0;
   for(let i=0;i<geom.length;i++){
     if(i>0) cum += haversine({lat:geom[i-1][1],lng:geom[i-1][0]},{lat:geom[i][1],lng:geom[i][0]})*1000;
-    pts.push({d:cum, e:geom[i][2]||0});
+    raw.push({d:cum, e:geom[i][2]||0});
   }
-  const total=cum; if(total<50) return null;
-  const eleAt=(d)=>{                       // linear interpolation along the profile
-    if(d<=0) return pts[0].e;
-    if(d>=total) return pts[pts.length-1].e;
-    let lo=0, hi=pts.length-1;
-    while(hi-lo>1){ const m=(lo+hi)>>1; (pts[m].d<=d)?lo=m:hi=m; }
-    const a=pts[lo], b=pts[hi], f=(d-a.d)/Math.max(1e-6,b.d-a.d);
+  const total=cum; if(total<80) return null;
+  // 1) 去尖刺：先做中位數濾波（±2 點取中位，處理副本，單/雙點 DEM 尖刺被吸收且不波及鄰點），
+  //    再以鄰點內插修正殘餘（此時已無大幅離群值，順序覆寫不會抹開尖刺）
+  const med=(arr)=>{const s=[...arr].sort((a,b)=>a-b);return s[(s.length-1)>>1];};
+  const cp=raw.map((p,i)=>{
+    const w=[];for(let k=-2;k<=2;k++){const j=i+k;if(j>=0&&j<raw.length)w.push(raw[j].e);}
+    return {d:p.d, e:med(w)};
+  });
+  for(let pass=0;pass<2;pass++){
+    for(let i=1;i<cp.length-1;i++){
+      const exp=(cp[i-1].e+cp[i+1].e)/2;
+      if(Math.abs(cp[i].e-exp)>12) cp[i].e=exp;
+    }
+  }
+  const src=cp;
+  const eleRaw=(d)=>{
+    if(d<=0) return src[0].e; if(d>=total) return src[src.length-1].e;
+    let lo=0,hi=src.length-1;
+    while(hi-lo>1){const m=(lo+hi)>>1;(src[m].d<=d)?lo=m:hi=m;}
+    const a=src[lo],b=src[hi],f=(d-a.d)/Math.max(1e-6,b.d-a.d);
     return a.e+(b.e-a.e)*f;
   };
-  const win=Math.max(80, Math.min(150, total/40));
-  const out=[];
+  // 2) 每 30m 重取樣，±60m 移動平均平滑
+  const step=30, N=Math.max(4,Math.round(total/step));
+  const rs=[]; for(let i=0;i<=N;i++){const d=total*i/N; rs.push({d,e:eleRaw(d)});}
+  const sm=rs.map((p,i)=>{let s=0,c=0;for(let k=-2;k<=2;k++){const j=i+k;if(j>=0&&j<rs.length){s+=rs[j].e;c++;}}return {d:p.d,e:s/c};});
+  const eleAt=(d)=>{
+    const f=Math.min(Math.max(d,0),total)/total*N, i=Math.min(N-1,Math.floor(f)), t=f-i;
+    return sm[i].e+(sm[i+1].e-sm[i].e)*t;
+  };
+  // 3) 100m 視窗坡度樣本（供坡度帶／均坡）
+  const win=100, out=[];
   for(let d0=0; d0<total; d0+=win){
     const d1=Math.min(total,d0+win);
-    const run=Math.max(1,d1-d0);
-    out.push({d0,d1,g:(eleAt(d1)-eleAt(d0))/run*100});
+    out.push({d0,d1,g:(eleAt(d1)-eleAt(d0))/Math.max(1,d1-d0)*100});
   }
-  return {samples:out, total, profile:pts};
+  // 4) 最陡＝連續 300m 的最大平均坡（每 100m 滑動）
+  let maxSus=0;
+  for(let d0=0; d0+300<=total || d0===0; d0+=100){
+    const d1=Math.min(total,d0+300); if(d1-d0<150) break;
+    maxSus=Math.max(maxSus,(eleAt(d1)-eleAt(d0))/(d1-d0)*100);
+  }
+  let noisy=false;
+  if(maxSus>30){ maxSus=30; noisy=true; }
+  // 5) 爬升/下降改由平滑剖面重算（每步 0.3m 死區）
+  let up=0,down=0;
+  for(let i=1;i<sm.length;i++){const dE=sm[i].e-sm[i-1].e;
+    if(dE>0.3)up+=dE; else if(dE<-0.3)down-=dE;}
+  return {samples:out, total, profile:sm, up:Math.round(up), down:Math.round(down),
+          maxSus:Math.round(maxSus*10)/10, noisy};
 }
 
 function summarizeGrades(gr){
-  if(!gr) return {maxG:null,avgG:null,bands:null};
+  if(!gr) return {maxG:null,avgG:null,bands:null,noisy:false};
   const s=gr.samples;
   const climbs=s.filter(x=>x.g>0.5);
   const avgG = climbs.length ? climbs.reduce((a,x)=>a+x.g*(x.d1-x.d0),0)/climbs.reduce((a,x)=>a+(x.d1-x.d0),0) : 0;
-  const sorted=[...s].sort((a,b)=>b.g-a.g);
-  const maxG = sorted.length? sorted[Math.min(1,sorted.length-1)].g : 0; // 2nd highest ≈ robust max
   const bands={flat:0,gentle:0,steep:0,vsteep:0,extreme:0};
   s.forEach(x=>{ const L=x.d1-x.d0, g=Math.abs(x.g);
     if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
     else if(g<=12)bands.vsteep+=L; else bands.extreme+=L; });
-  return {maxG:Math.round(maxG*10)/10, avgG:Math.round(avgG*10)/10, bands}; // bands 為公尺
+  return {maxG:gr.maxSus, avgG:Math.round(avgG*10)/10, bands, noisy:gr.noisy}; // bands 為公尺
 }
 
 async function routeSegment(a,b){
@@ -673,7 +758,9 @@ async function routeSegment(a,b){
     if(!j.geometry) return null;
     const gr=gradesFromGeom(j.geometry);
     const sum=summarizeGrades(gr);
-    return { dist:(j.distance||0)/1000, up:j.ascent||0, down:j.descent||0,
+    return { dist:(j.distance||0)/1000,
+             up: gr? gr.up : (j.ascent||0),
+             down: gr? gr.down : (j.descent||0),
              geom:j.geometry, grades:gr, steps:j.steps||[], est:false, ...sum };
   }catch(e){ return null; }
 }
