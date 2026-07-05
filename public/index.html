@@ -576,11 +576,14 @@ function renderRoute(){
       let gradeHtml="";
       if(S.bands){
         head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${S.maxG}%`
+              + (S.artifact?` <span class="seg-est">已濾除疑似隧道／峽谷之高程假訊</span>`:"")
               + (S.noisy?` <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>`:"");
-        const B=S.bands, lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡"},
-              col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318"};
+        const B=S.bands,
+              lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡",down:"下坡",downS:"陡降"},
+              col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318",down:"#8FA0B5",downS:"#4A6076"};
         const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
-        gradeHtml='<div class="grade-chips"><span class="gk">坡度組成</span>'+Object.keys(B).filter(k=>B[k]>=100)
+        gradeHtml='<div class="grade-chips"><span class="gk">坡度組成</span>'+["flat","gentle","steep","vsteep","extreme","down","downS"]
+          .filter(k=>B[k]>=100)
           .map(k=>`<span class="gchip" style="background:${col[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
       }
       const cvId="cv"+i;
@@ -686,11 +689,13 @@ function gradesFromGeom(geom){
     raw.push({d:cum, e:geom[i][2]||0});
   }
   const total=cum; if(total<80) return null;
-  // 1) 去尖刺：先做中位數濾波（±2 點取中位，處理副本，單/雙點 DEM 尖刺被吸收且不波及鄰點），
-  //    再以鄰點內插修正殘餘（此時已無大幅離群值，順序覆寫不會抹開尖刺）
+  // 1) 去尖刺：距離式中位數濾波（±100m 內取中位，處理副本），可吃掉寬達 ~200m 的橋樑／峽谷壁假訊
   const med=(arr)=>{const s=[...arr].sort((a,b)=>a-b);return s[(s.length-1)>>1];};
   const cp=raw.map((p,i)=>{
-    const w=[];for(let k=-2;k<=2;k++){const j=i+k;if(j>=0&&j<raw.length)w.push(raw[j].e);}
+    const w=[]; let j=i;
+    while(j>=0 && p.d-raw[j].d<=100){ w.push(raw[j].e); j--; }
+    j=i+1;
+    while(j<raw.length && raw[j].d-p.d<=100){ w.push(raw[j].e); j++; }
     return {d:p.d, e:med(w)};
   });
   for(let pass=0;pass<2;pass++){
@@ -721,32 +726,42 @@ function gradesFromGeom(geom){
     const d1=Math.min(total,d0+win);
     out.push({d0,d1,g:(eleAt(d1)-eleAt(d0))/Math.max(1,d1-d0)*100});
   }
-  // 4) 最陡＝連續 300m 的最大平均坡（每 100m 滑動）
-  let maxSus=0;
+  // 4) 最陡＝連續 300m 的最大平均「爬」坡，且須位於持續爬升的脈絡中
+  //    （前後各外推 250m 的淨爬升 ≥15m 才計入；孤立的凸包＝隧道上方山體／峽谷壁假訊，排除）
+  let maxEligible=0, maxPlain=0;
   for(let d0=0; d0+300<=total || d0===0; d0+=100){
     const d1=Math.min(total,d0+300); if(d1-d0<150) break;
-    maxSus=Math.max(maxSus,(eleAt(d1)-eleAt(d0))/(d1-d0)*100);
+    const g=(eleAt(d1)-eleAt(d0))/(d1-d0)*100;
+    if(g>maxPlain) maxPlain=g;
+    const net=eleAt(Math.min(total,d1+250))-eleAt(Math.max(0,d0-250));
+    if(net>=15 && g>maxEligible) maxEligible=g;
   }
-  let noisy=false;
+  if(maxEligible===0){   // 全程無持續爬升：用正坡樣本的 90 百分位當代表值
+    const pos=out.filter(x=>x.g>0).map(x=>x.g).sort((a,b)=>a-b);
+    maxEligible = pos.length ? pos[Math.floor(pos.length*0.9)] : 0;
+  }
+  const artifact = (maxPlain - maxEligible) > 8;   // 假凸包被濾掉的痕跡，如實標示
+  let maxSus=maxEligible, noisy=false;
   if(maxSus>30){ maxSus=30; noisy=true; }
   // 5) 爬升/下降改由平滑剖面重算（每步 0.3m 死區）
   let up=0,down=0;
   for(let i=1;i<sm.length;i++){const dE=sm[i].e-sm[i-1].e;
     if(dE>0.3)up+=dE; else if(dE<-0.3)down-=dE;}
   return {samples:out, total, profile:sm, up:Math.round(up), down:Math.round(down),
-          maxSus:Math.round(maxSus*10)/10, noisy};
+          maxSus:Math.round(maxSus*10)/10, noisy, artifact};
 }
 
 function summarizeGrades(gr){
-  if(!gr) return {maxG:null,avgG:null,bands:null,noisy:false};
+  if(!gr) return {maxG:null,avgG:null,bands:null,noisy:false,artifact:false};
   const s=gr.samples;
   const climbs=s.filter(x=>x.g>0.5);
   const avgG = climbs.length ? climbs.reduce((a,x)=>a+x.g*(x.d1-x.d0),0)/climbs.reduce((a,x)=>a+(x.d1-x.d0),0) : 0;
-  const bands={flat:0,gentle:0,steep:0,vsteep:0,extreme:0};
-  s.forEach(x=>{ const L=x.d1-x.d0, g=Math.abs(x.g);
-    if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
+  const bands={flat:0,gentle:0,steep:0,vsteep:0,extreme:0,down:0,downS:0};
+  s.forEach(x=>{ const L=x.d1-x.d0, g=x.g;
+    if(g<=-8)bands.downS+=L; else if(g<-2)bands.down+=L;
+    else if(g<=2)bands.flat+=L; else if(g<=5)bands.gentle+=L; else if(g<=8)bands.steep+=L;
     else if(g<=12)bands.vsteep+=L; else bands.extreme+=L; });
-  return {maxG:gr.maxSus, avgG:Math.round(avgG*10)/10, bands, noisy:gr.noisy}; // bands 為公尺
+  return {maxG:gr.maxSus, avgG:Math.round(avgG*10)/10, bands, noisy:gr.noisy, artifact:gr.artifact}; // bands 為公尺
 }
 
 async function routeSegment(a,b){
@@ -861,8 +876,11 @@ async function aiParse(){
 
 // ---------- map ----------
 let MAP=null, MAPLAYER=null;
-function gradeColor(g){ const a=Math.abs(g);
-  return a<=2?"#5FA046" : a<=5?"#B08A3E" : a<=8?"#CE8418" : a<=12?"#BE5027" : "#8C2318"; }
+function gradeColor(g){
+  if(g<-8) return "#4A6076";        // 陡降
+  if(g<-2) return "#8FA0B5";        // 下坡
+  return g<=2?"#5FA046" : g<=5?"#B08A3E" : g<=8?"#CE8418" : g<=12?"#BE5027" : "#8C2318";
+}
 function drawElev(id, gr, steps){
   const cv=document.getElementById(id); if(!cv) return;
   const W=cv.clientWidth||600, H=72; cv.width=W*2; cv.height=H*2;
@@ -874,9 +892,22 @@ function drawElev(id, gr, steps){
   const X=d=>pad+(W-2*pad)*d/T, Y=e=>H-6-(H-30)*(e-mn)/span;
   ctx.beginPath(); ctx.moveTo(X(0),H);
   P.forEach(p=>ctx.lineTo(X(p.d),Y(p.e))); ctx.lineTo(X(T),H); ctx.closePath();
-  ctx.fillStyle="rgba(176,138,62,0.18)"; ctx.fill();
-  ctx.beginPath(); P.forEach((p,i)=>i?ctx.lineTo(X(p.d),Y(p.e)):ctx.moveTo(X(p.d),Y(p.e)));
-  ctx.strokeStyle="#B08A3E"; ctx.lineWidth=1.6; ctx.stroke();
+  ctx.fillStyle="rgba(176,138,62,0.14)"; ctx.fill();
+  // 剖面線依坡度帶著色（顏色與坡度組成、地圖一致）
+  ctx.lineWidth=2.2; ctx.lineCap="round";
+  let ci=0;
+  gr.samples.forEach(sm=>{
+    ctx.beginPath();
+    let started=false;
+    while(ci<P.length && P[ci].d<=sm.d1+1){
+      const x=X(P[ci].d), y=Y(P[ci].e);
+      started ? ctx.lineTo(x,y) : (ctx.moveTo(x,y), started=true);
+      ci++;
+    }
+    if(ci<P.length){ ctx.lineTo(X(P[ci].d),Y(P[ci].e)); }
+    ci=Math.max(0,ci-1);
+    ctx.strokeStyle=gradeColor(sm.g); ctx.stroke();
+  });
   ctx.font="9px 'Noto Serif TC', serif";
   // 最高點標記
   const px=Math.min(W-30,Math.max(16,X(P[pi].d))), py=Y(P[pi].e);
