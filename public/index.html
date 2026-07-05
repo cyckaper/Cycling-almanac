@@ -150,6 +150,24 @@
   .loading__txt{font-size:15px; color:var(--body); letter-spacing:.02em}
   .btn-go:disabled{opacity:.6; cursor:progress}
   @media (prefers-reduced-motion:reduce){ .spinner{animation-duration:2.4s} }
+  @media (prefers-reduced-motion:no-preference){
+    @keyframes riseIn{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+    .mast,.today,.panel{animation:riseIn .6s ease both}
+    .today{animation-delay:.12s} .panel{animation-delay:.22s}
+    .verdict,.tnode,.tseg,.regime,.disclaim{animation:riseIn .5s ease both}
+    @keyframes vpulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--vc,var(--good)) 20%,transparent)}
+      50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--vc,var(--good)) 8%,transparent)}}
+    .vdot{animation:vpulse 2.4s ease-in-out infinite}
+    .tcard{transition:transform .22s ease, box-shadow .22s ease}
+    .tcard:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(42,38,34,.10)}
+    .gchip{transition:transform .18s ease}
+    .gchip:hover{transform:translateY(-1px) scale(1.04)}
+    .today__badge{animation:vpulse 3.2s ease-in-out infinite; --vc:var(--tc,var(--good))}
+  }
+  .disclaim{margin:14px 0 0; padding:11px 14px; font-size:13px; color:var(--body); line-height:1.7;
+    background:color-mix(in srgb,var(--warn) 8%, transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 35%, transparent); border-radius:6px}
+  .disclaim b{color:#9a6a1e}
   .vgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px}
   .vcell{background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:11px 13px}
   .vcell__k{font-size:11px; letter-spacing:.16em; color:var(--muted); margin:0 0 4px}
@@ -273,7 +291,8 @@
       <p class="hint">每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。</p>
 
       <div class="controls">
-        <div class="ctl-group"><span class="ctl-label">出發時間</span><input type="time" id="startTime" class="time-input" value="06:30" step="300"></div>
+        <div class="ctl-group"><span class="ctl-label">出發日期</span><input type="date" id="startDate" class="time-input"></div>
+        <div class="ctl-group"><span class="ctl-label">時間</span><input type="time" id="startTime" class="time-input" value="09:00" step="300"></div>
         <div class="ctl-group"><span class="ctl-label">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label">分</span></div>
         <div class="ctl-group"><button class="toggle" id="revBtn">反轉方向 ⇄</button></div>
       </div>
@@ -281,6 +300,7 @@
     </div>
 
     <div class="verdict" id="verdict"></div>
+    <p class="disclaim" id="disclaim" hidden>⚠ 路線、坡度、天氣皆為<b>推估</b>：實際狀況因所選路段、地形與季節變化甚大，本分析僅供行前參考，出發前後請以現場路況與官方資訊為準，並自負騎乘安全。</p>
     <div id="map" class="map" hidden></div>
     <div class="route-tools" id="routeTools" hidden>
       <button class="mini-btn" id="gpxBtn">下載 GPX</button>
@@ -306,8 +326,10 @@
     </div>
 
     <footer class="colophon">
-      <b>單車騎行農民曆</b> · 版本 <b>v1.5</b>（2026-07-05）<br>
-      路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依配速 15 km/h 與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
+      <b>單車騎行農民曆</b> · 版本 <b>v1.6</b>（2026-07-05）<br>
+      © 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>
+      路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>
+      路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路15・緩坡11・陡坡8.5・很陡6.5・極陡5・下坡24 km/h）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
       地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。
     </footer>
   </div>
@@ -319,7 +341,9 @@ const TERM_STARTS = [[2, 4], [2, 19], [3, 5], [3, 20], [4, 4], [4, 20], [5, 5], 
 const STATIONS = [["基隆", 25.131, 121.74, "台鐵"], ["七堵", 25.096, 121.713, "台鐵"], ["汐止", 25.069, 121.662, "台鐵"], ["南港", 25.053, 121.607, "台鐵"], ["松山", 25.049, 121.577, "台鐵"], ["臺北", 25.048, 121.517, "台鐵"], ["萬華", 25.033, 121.5, "台鐵"], ["板橋", 25.014, 121.464, "台鐵"], ["樹林", 24.991, 121.426, "台鐵"], ["鶯歌", 24.954, 121.354, "台鐵"], ["桃園", 24.989, 121.314, "台鐵"], ["中壢", 24.954, 121.225, "台鐵"], ["新竹", 24.802, 120.972, "台鐵"], ["竹南", 24.686, 120.873, "台鐵"], ["苗栗", 24.569, 120.826, "台鐵"], ["臺中", 24.137, 120.686, "台鐵"], ["彰化", 24.082, 120.538, "台鐵"], ["員林", 23.959, 120.571, "台鐵"], ["斗六", 23.712, 120.535, "台鐵"], ["嘉義", 23.479, 120.442, "台鐵"], ["臺南", 22.997, 120.212, "台鐵"], ["高雄", 22.639, 120.302, "台鐵"], ["屏東", 22.671, 120.488, "台鐵"], ["潮州", 22.55, 120.543, "台鐵"], ["八堵", 25.109, 121.723, "台鐵"], ["瑞芳", 25.108, 121.806, "台鐵"], ["猴硐", 25.087, 121.828, "台鐵"], ["三貂嶺", 25.061, 121.824, "台鐵"], ["牡丹", 25.038, 121.849, "台鐵"], ["雙溪", 25.037, 121.866, "台鐵"], ["貢寮", 25.021, 121.908, "台鐵"], ["福隆", 25.015, 121.944, "台鐵"], ["石城", 24.983, 121.941, "台鐵"], ["大里", 24.968, 121.918, "台鐵"], ["頭城", 24.859, 121.823, "台鐵"], ["礁溪", 24.827, 121.774, "台鐵"], ["宜蘭", 24.752, 121.751, "台鐵"], ["羅東", 24.677, 121.766, "台鐵"], ["冬山", 24.635, 121.792, "台鐵"], ["蘇澳新", 24.599, 121.833, "台鐵"], ["蘇澳", 24.594, 121.848, "台鐵"], ["東澳", 24.499, 121.831, "台鐵"], ["南澳", 24.464, 121.8, "台鐵"], ["和平", 24.309, 121.755, "台鐵"], ["崇德", 24.212, 121.643, "台鐵"], ["新城", 24.128, 121.641, "台鐵"], ["花蓮", 23.993, 121.601, "台鐵"], ["吉安", 23.966, 121.578, "台鐵"], ["志學", 23.923, 121.545, "台鐵"], ["壽豐", 23.868, 121.508, "台鐵"], ["鳳林", 23.745, 121.451, "台鐵"], ["光復", 23.669, 121.421, "台鐵"], ["瑞穗", 23.497, 121.377, "台鐵"], ["玉里", 23.337, 121.315, "台鐵"], ["富里", 23.18, 121.245, "台鐵"], ["池上", 23.122, 121.215, "台鐵"], ["關山", 23.049, 121.161, "台鐵"], ["鹿野", 22.921, 121.135, "台鐵"], ["臺東", 22.793, 121.13, "台鐵"], ["海科館", 25.135, 121.803, "台鐵"], ["八斗子", 25.139, 121.803, "台鐵"], ["大華", 25.045, 121.808, "台鐵"], ["十分", 25.043, 121.775, "台鐵"], ["望古", 25.036, 121.76, "台鐵"], ["嶺腳", 25.028, 121.742, "台鐵"], ["平溪", 25.025, 121.74, "台鐵"], ["菁桐", 25.023, 121.726, "台鐵"], ["二水", 23.809, 120.617, "台鐵"], ["集集", 23.828, 120.785, "台鐵"], ["車埕", 23.836, 120.855, "台鐵"], ["淡水", 25.168, 121.446, "捷運"], ["紅樹林", 25.155, 121.459, "捷運"], ["竹圍", 25.137, 121.46, "捷運"], ["關渡", 25.126, 121.467, "捷運"], ["北投", 25.131, 121.499, "捷運"], ["新北投", 25.137, 121.503, "捷運"], ["石牌", 25.114, 121.515, "捷運"], ["士林", 25.094, 121.526, "捷運"], ["劍潭", 25.084, 121.525, "捷運"], ["圓山", 25.071, 121.52, "捷運"], ["民權西路", 25.063, 121.519, "捷運"], ["中山", 25.053, 121.52, "捷運"], ["台北車站", 25.048, 121.517, "捷運"], ["中正紀念堂", 25.033, 121.518, "捷運"], ["東門", 25.034, 121.529, "捷運"], ["大安", 25.033, 121.543, "捷運"], ["信義安和", 25.033, 121.552, "捷運"], ["台北101", 25.033, 121.563, "捷運"], ["象山", 25.032, 121.57, "捷運"], ["古亭", 25.026, 121.523, "捷運"], ["台電大樓", 25.021, 121.528, "捷運"], ["公館", 25.015, 121.534, "捷運"], ["景美", 24.993, 121.541, "捷運"], ["大坪林", 24.983, 121.541, "捷運"], ["七張", 24.977, 121.542, "捷運"], ["新店區公所", 24.968, 121.537, "捷運"], ["新店", 24.958, 121.537, "捷運"], ["西門", 25.042, 121.508, "捷運"], ["松江南京", 25.052, 121.533, "捷運"], ["南京復興", 25.052, 121.544, "捷運"], ["台北小巨蛋", 25.052, 121.551, "捷運"], ["南京三民", 25.052, 121.56, "捷運"], ["松山", 25.05, 121.578, "捷運"], ["龍山寺", 25.035, 121.5, "捷運"], ["江子翠", 25.03, 121.474, "捷運"], ["新埔", 25.023, 121.468, "捷運"], ["板橋", 25.014, 121.462, "捷運"], ["府中", 25.008, 121.459, "捷運"], ["亞東醫院", 24.998, 121.452, "捷運"], ["土城", 24.973, 121.444, "捷運"], ["永寧", 24.967, 121.436, "捷運"], ["頂埔", 24.96, 121.42, "捷運"], ["忠孝新生", 25.042, 121.533, "捷運"], ["忠孝復興", 25.042, 121.544, "捷運"], ["忠孝敦化", 25.042, 121.551, "捷運"], ["國父紀念館", 25.041, 121.557, "捷運"], ["市政府", 25.041, 121.565, "捷運"], ["永春", 25.041, 121.576, "捷運"], ["後山埤", 25.045, 121.582, "捷運"], ["昆陽", 25.051, 121.593, "捷運"], ["南港展覽館", 25.055, 121.618, "捷運"], ["動物園", 24.998, 121.579, "捷運"], ["木柵", 24.998, 121.573, "捷運"], ["萬芳社區", 24.999, 121.568, "捷運"], ["六張犁", 25.024, 121.553, "捷運"], ["科技大樓", 25.026, 121.543, "捷運"], ["中山國中", 25.061, 121.544, "捷運"], ["松山機場", 25.062, 121.552, "捷運"], ["大直", 25.079, 121.547, "捷運"], ["劍南路", 25.084, 121.556, "捷運"], ["西湖", 25.082, 121.567, "捷運"], ["內湖", 25.084, 121.594, "捷運"], ["行天宮", 25.062, 121.533, "捷運"], ["中山國小", 25.063, 121.526, "捷運"], ["大橋頭", 25.063, 121.512, "捷運"], ["三重國小", 25.07, 121.496, "捷運"], ["菜寮", 25.061, 121.489, "捷運"], ["頭前庄", 25.049, 121.46, "捷運"], ["新莊", 25.037, 121.451, "捷運"], ["輔大", 25.032, 121.433, "捷運"], ["迴龍", 25.028, 121.418, "捷運"], ["三民高中", 25.079, 121.484, "捷運"], ["蘆洲", 25.085, 121.472, "捷運"], ["頂溪", 25.012, 121.515, "捷運"], ["永安市場", 24.994, 121.512, "捷運"], ["景安", 24.994, 121.505, "捷運"], ["南勢角", 24.986, 121.507, "捷運"], ["新北產業園區", 25.062, 121.459, "捷運"], ["板新", 25.021, 121.469, "捷運"], ["中和", 25.001, 121.48, "捷運"], ["景平", 24.992, 121.51, "捷運"], ["十四張", 24.987, 121.532, "捷運"]];
 const SEASON_COLOR = {spring:"#5FA046",summer:"#CE8418",autumn:"#BE5027",winter:"#34877C"};
 
-let START = 390, DWELL = 15, REVERSED = false;
+let START = 540, DWELL = 15, REVERSED = false;
+let START_DATE = (()=>{const d=new Date(); d.setHours(0,0,0,0); return d;})();
+const dateISO = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 let ROUTE = [];   // resolved gazetteer entries in order
 
 // ---------- resolve place names (curated fast-path, then live geocode) ----------
@@ -381,6 +405,16 @@ function bearing(a,b){
 }
 function angDiff(a,b){ let d=Math.abs(a-b)%360; return d>180?360-d:d; }
 const DETOUR=1.3, ROLL=6, SPEED=15, CLIMB=0.06;
+// 坡度分段配速（km/h）：坡度對時間影響巨大，逐段依坡度計時
+function paceKmh(g){ return g<=-2?24 : g<=2?15 : g<=5?11 : g<=8?8.5 : g<=12?6.5 : 5; }
+function segMinutes(seg){
+  if(seg.grades && seg.grades.samples.length){
+    let min=0;
+    seg.grades.samples.forEach(s=>{ min += ((s.d1-s.d0)/1000) / paceKmh(s.g) * 60; });
+    return min;
+  }
+  return seg.dist/SPEED*60 + seg.up*CLIMB;   // 無剖面時退回舊估法
+}
 
 // ---------- weather (illustrative, by zone + elevation) ----------
 function lerp(pts,h){
@@ -424,7 +458,7 @@ async function fetchWeather(){
   if(!pts.length) return;
   try{
     const r=await fetch(API('/api/weather'),{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({points:pts.map(p=>({lat:p.lat,lng:p.lng}))})});
+      body:JSON.stringify({points:pts.map(p=>({lat:p.lat,lng:p.lng})), date:dateISO(START_DATE)})});
     if(!r.ok) return;
     const j=await r.json();
     (j.points||[]).forEach((rec,i)=>{
@@ -450,8 +484,7 @@ function wx(pt, hour){
   const rec=WXMAP.get(wxKey(pt));
   const sim=wxSim(pt.wz, pt.elev, ((hour%24)+24)%24);
   if(!rec) return sim;
-  const base=new Date(); base.setHours(0,0,0,0);
-  const ms=base.getTime()+hour*3600*1000;
+  const ms=START_DATE.getTime()+hour*3600*1000;
   const H=rec.hourly, T=H.time;
   if(ms<T[0]-3*3600e3 || ms>T[T.length-1]+3*3600e3) return sim;   // 超出預報範圍
   const temp=interp(T,H.temp,ms), pop=interp(T,H.pop,ms),
@@ -467,8 +500,8 @@ function wx(pt, hour){
 }
 
 // ---------- today's solar term ----------
-function todayTerm(){
-  const now=new Date(), ord=(now.getMonth()+1)*100+now.getDate();
+function termFor(dt){
+  const ord=(dt.getMonth()+1)*100+dt.getDate();
   let best=-1, bestOrd=-1;
   for(let i=0;i<TERM_STARTS.length;i++){
     const o=TERM_STARTS[i][0]*100+TERM_STARTS[i][1];
@@ -485,7 +518,7 @@ function build(){
     let seg=null;
     if(i>0){
       seg = SEGDATA[i-1] || estSegment(pts[i-1],pts[i]);
-      t += seg.dist/SPEED*60 + seg.up*CLIMB;
+      t += segMinutes(seg);
     }
     const arrMin=t, hour=arrMin/60;
     const w=wx(pts[i], hour);
@@ -507,7 +540,7 @@ function build(){
     if(pts[i].esc.hard)score+=1;
     const tier=score>=4?"risk":score>=2?"warn":"good";
     rows.push({pt:pts[i],seg,arrMin,w,wind,tier,score});
-    if(i<pts.length-1) t+=DWELL;
+    if(i>0 && i<pts.length-1) t+=DWELL;   // 起點不計停留：出發時間＝離開起點的時刻
   }
   return rows;
 }
@@ -518,7 +551,7 @@ const fmtD=m=>{const d=Math.floor(Math.round(m)/1440); return fmt(m)+(d>=1?` <sp
 const COLOR={good:"var(--good)",warn:"var(--warn)",risk:"var(--risk)"};
 
 function renderToday(){
-  const ti=todayTerm(), tt=TERMS[ti], col=SEASON_COLOR[tt.season];
+  const ti=termFor(new Date()), tt=TERMS[ti], col=SEASON_COLOR[tt.season];
   const c=document.getElementById('todayCard');
   c.style.setProperty('--tc',col);
   c.innerHTML=`
@@ -542,7 +575,7 @@ function renderRoute(){
     tl.innerHTML=""; return;
   }
   const rows=build();
-  const tt=TERMS[todayTerm()];
+  const tt=TERMS[termFor(START_DATE)];
 
   let worst=rows[0]; rows.forEach(r=>{if(r.score>worst.score)worst=r;});
   const heads=rows.filter(r=>r.wind&&r.wind.kind==="head");
@@ -565,14 +598,14 @@ function renderRoute(){
   if(worst.tier==="risk"){
     rec=`挑戰集中在 <b>${fmtD(worst.arrMin)} 的${worst.pt.n}</b>。可試著 <b>提早出發</b>、<b>縮短每點停留</b>，或 <b>反轉方向</b>，把最具挑戰路段的抵達時刻挪開午後對流。`;
   } else {
-    rec=`目前排程的節奏尚可；若要更保險，把暴露路段的抵達時刻壓在午前最穩妥。今日${tt.name}，${tt.verse}`;
+    rec=`目前排程的節奏尚可；若要更保險，把暴露路段的抵達時刻壓在午前最穩妥。出發日${tt.name}，${tt.verse}`;
   }
 
   v.style.setProperty('--vc', implausible?'var(--risk)':COLOR[tier]);
   v.innerHTML=`
     ${implausible?'<p class="route-warn">⚠ 路線總距離偏大（約 '+totalKm.toFixed(0)+' km），可能有地名被定位到錯誤位置。請在可疑地名後加上縣市或鄰近大地標，再查一次。</p>':''}
     <p class="route-title">${nameList.join(" → ")}</p>
-    <p class="route-sub">${ROUTE.length} 點 · 約 ${totalKm.toFixed(0)} km · 爬升 ~${Math.round(totalUp/10)*10} m · 今日${tt.name} · 天氣：${WXSRC}</p>
+    <p class="route-sub">${ROUTE.length} 點 · 約 ${totalKm.toFixed(0)} km · 爬升 ~${Math.round(totalUp/10)*10} m · 出發日${tt.name} · 天氣：${WXSRC}</p>
     <div class="verdict__top"><span class="vdot"></span><span class="vstatus">${statusText}</span></div>
     <p class="vsent">${sent}</p>
     <div class="vgrid">
@@ -638,6 +671,7 @@ function renderRoute(){
     const escSvg=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15h16M6 15V7a2 2 0 012-2h8a2 2 0 012 2v8M8 19v2M16 19v2M9 11h6"/></svg>`;
     const windPill=wind?`<span class="pill pill--wind ${wind.kind}"><span class="warr" style="transform:rotate(${wind.rot}deg)"></span>${wind.label} ${wind.spd} km/h</span>`:"";
     const node=document.createElement('div'); node.className="tnode"; node.style.setProperty('--sc',COLOR[r.tier]);
+    node.style.animationDelay=(Math.min(i,10)*70)+"ms";
     const rt = r.pt.retreat;
     const escTxt = rt
       ? `轉進機會：${rt.st}（${rt.road?"路網":"估"} ${rt.km} km）${rt.hard?" · 距離偏遠":""}`
@@ -676,6 +710,7 @@ async function analyze(){
   renderMap();
   const tools=document.getElementById('routeTools');
   tools.hidden = ROUTE.length<2;
+  document.getElementById('disclaim').hidden = ROUTE.length<2;
   document.getElementById('gmapsBtn').href=gmapsUrl();
 }
 
@@ -856,9 +891,11 @@ async function routeAll(){
     SEGDATA.push(seg);
   }
   const modeEl=document.getElementById('routeMode');
-  if(modeEl) modeEl.textContent = anyReal
+  const stamp=new Date(), hhmm=String(stamp.getHours()).padStart(2,"0")+":"+String(stamp.getMinutes()).padStart(2,"0");
+  if(modeEl) modeEl.textContent = (anyReal
     ? (anyEst? "部分路段為直線推估（路網服務未回應）" : "路徑、距離與坡度皆依真實路網計算")
-    : "目前為直線推估模式 — 部署 ORS_API_KEY 後即為真實路網";
+    : "目前為直線推估模式 — 部署 ORS_API_KEY 後即為真實路網")
+    + ` · 本次計算於 ${hhmm}，每次查詢皆重新取得路網、坡度與天氣`;
 }
 
 // ---------- retreat points via road-distance matrix ----------
@@ -1176,6 +1213,14 @@ document.addEventListener('click', e=>{ if(!e.target.closest('.combo')) hideSugg
 
 // ----- controls -----
 document.getElementById('clearBtn').addEventListener('click',()=>{ WAYPOINTS=[]; renderWaypoints(); ROUTE=[]; renderRoute(); });
+document.getElementById('startDate').value = dateISO(START_DATE);
+document.getElementById('startDate').addEventListener('input', async e=>{
+  const v=e.target.value; if(!v) return;
+  const d=new Date(v+"T00:00:00"); if(isNaN(d)) return;
+  START_DATE=d;
+  if(ROUTE.length>=2){ showLoading("依出發日期重取天氣中…"); await fetchWeather(); }
+  renderRoute();
+});
 document.getElementById('startTime').addEventListener('input',e=>{
   const v=e.target.value; if(!/^\d{1,2}:\d{2}$/.test(v))return;
   const [h,m]=v.split(':').map(Number); START=h*60+m; renderRoute();
@@ -1192,7 +1237,7 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("單車騎行農民曆 v1.5 (2026-07-05)");
+console.log("單車騎行農民曆 v1.6 (2026-07-05)");
 renderWaypoints();
 renderToday();
 analyze();
