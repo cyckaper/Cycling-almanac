@@ -23,12 +23,19 @@ export default async (req) => {
   const pts = Array.isArray(body.points) ? body.points.slice(0, 12) : [];
   if (!pts.length) return json({ error: "points 為空" }, 400);
   const cwaKey = Netlify.env.get("CWA_API_KEY");
+  // 出發日期（可為未來日）：CWA 鄉鎮逐3小時僅涵蓋約2天，超過改用 Open-Meteo 7天預報
+  let hoursAhead = 0;
+  if (body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+    const target = Date.parse(body.date + "T12:00:00+08:00");
+    if (isFinite(target)) hoursAhead = (target - Date.now()) / 3600e3;
+  }
+  const cwaUsable = cwaKey && hoursAhead <= 40;
 
   const out = [];
   for (const p of pts) {
     if (!isFinite(p.lat) || !isFinite(p.lng)) { out.push({ source: "none" }); continue; }
     let rec = null;
-    if (cwaKey) rec = await tryCwa(p, cwaKey).catch(() => null);
+    if (cwaUsable) rec = await tryCwa(p, cwaKey).catch(() => null);
     if (!rec) rec = await tryOpenMeteo(p).catch(() => null);
     out.push(rec || { source: "none" });
   }
@@ -123,7 +130,7 @@ async function tryCwa(p, key) {
 async function tryOpenMeteo(p) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}` +
     `&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,uv_index` +
-    `&forecast_days=2&timezone=Asia%2FTaipei`;
+    `&forecast_days=7&timezone=Asia%2FTaipei`;
   const r = await fetch(url);
   if (!r.ok) return null;
   const j = await r.json();
@@ -143,7 +150,7 @@ async function tryOpenMeteo(p) {
   };
 }
 async function omUv(p, timeMs) {
-  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&hourly=uv_index&forecast_days=2&timezone=Asia%2FTaipei`);
+  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&hourly=uv_index&forecast_days=7&timezone=Asia%2FTaipei`);
   if (!r.ok) return null;
   const j = await r.json(), H = j.hourly || {};
   if (!H.time) return null;
