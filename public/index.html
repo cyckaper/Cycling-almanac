@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>單車騎行農民曆 · 路線天時</title>
+<title>小布路書 · Brompton 路線天時</title>
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" fill="none" stroke="%232A2622" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="29" r="8.5"/><circle cx="49" cy="29" r="8.5"/><path d="M49 29 45.5 11.5"/><path d="M45.5 12C40.5 20 34 24 29.5 26L15 29"/><path d="M29.5 26 23.5 7.5M19.5 7 27.5 7"/></svg>'>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
@@ -27,6 +28,12 @@
     font-size:12px; color:var(--muted); margin:0 0 12px}
   .mast__title{font-weight:900; font-size:clamp(30px,6.4vw,52px); letter-spacing:.12em; margin:0; color:var(--ink); line-height:1.1}
   .mast__sub{font-family:"Fraunces",serif; font-style:italic; font-size:clamp(13px,2.5vw,16px); color:var(--muted); margin:12px 0 0}
+  .mast__logo{display:block; margin:0 auto 12px; width:60px; height:auto; color:var(--ink)}
+  .mast__cred{font-size:12px; letter-spacing:.18em; color:var(--gold); margin:10px 0 0; font-weight:600}
+  .method{margin:34px 0 0; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:2px 22px 4px}
+  .method summary{cursor:pointer; font-weight:700; color:var(--ink); font-size:15px; padding:13px 0; letter-spacing:.04em}
+  .method summary:hover{color:var(--gold)}
+  .method p{font-size:14px; margin:2px 0 13px}
 
   /* today term card */
   .today{display:flex; gap:16px; align-items:center; margin:26px 0 0; background:var(--card);
@@ -267,9 +274,21 @@
 <body>
   <div class="wrap">
     <header class="mast">
-      <p class="mast__ey">A Cyclist&#39;s Almanac · Taiwan</p>
-      <h1 class="mast__title">單車騎行農民曆</h1>
-      <p class="mast__sub">Enter any waypoints in order — read the line through the day, and the season</p>
+      <p class="mast__ey">A Brompton Roadbook · Taiwan</p>
+      <svg class="mast__logo" viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="15" cy="29" r="8.5"/>
+        <circle cx="49" cy="29" r="8.5"/>
+        <path d="M49 29 L45.5 11.5"/>
+        <path d="M45.5 11.5 C45 8.5 43.5 7 41.5 6.5"/>
+        <path d="M45.5 12 C40.5 20 34 24 29.5 26"/>
+        <path d="M29.5 26 L15 29"/>
+        <path d="M29.5 26 L23.5 7.5"/>
+        <path d="M19.5 7 L27.5 7"/>
+        <circle cx="29.5" cy="26" r="2.6"/>
+      </svg>
+      <h1 class="mast__title">小布路書</h1>
+      <p class="mast__sub">Fold out, ride on — read the line through the day, and the season</p>
+      <p class="mast__cred">2018–2026 · 834 趟實騎 · 31,790 公里經驗校準</p>
     </header>
 
     <div class="today" id="todayCard"></div>
@@ -327,8 +346,16 @@
       <span><i style="background:#4A6076"></i>陡降 低於−8%</span>
     </div>
 
+    <details class="method" id="method">
+      <summary>這些時刻怎麼算？——834 趟實騎的校準方法</summary>
+      <p>本站的抵達時刻不是理論值，而是從車主 2018–2026 年間以 Brompton 實際完成、記錄於 Komoot 的 939 趟騎乘中校準出來的。剔除非單車活動、短於 3 公里或缺時間戳的紀錄後，留下 <b>834 趟、約 31,790 公里、六百二十萬個軌跡點</b>。</p>
+      <p>每條軌跡先做高程清理：沿線以 ±100 公尺視窗中位數濾波去除尖刺，再每 30 公尺重取樣、±60 公尺移動平均平滑；坡度取 ±50 公尺視窗的高差比，據此把每一小段歸入七個坡度帶——陡降（≤−8%）、下坡、平路（−2〜2%）、緩坡、陡坡、很陡、極陡（&gt;12%）。</p>
+      <p>速度統計剔除近乎靜止（&lt;1.5 km/h）、GPS 突跳（&gt;80 km/h）與錄製斷點（相鄰點時距 ≥10 秒的橋接段）後，各帶採<b>有效速度＝Σ距離 ÷ Σ移動時間</b>——而非平均巡航速度：慢的路段按時間放大權重，算出來的才是「抵達時刻」真正需要的數字。樣本以近 24 個月為主，不足的帶回退全庫。</p>
+      <p>交叉驗證：全庫算得的平路有效速度 16.3 km/h，與另一趟獨立實騎量得、並通過沿線抵達時刻三分鐘誤差檢驗的 16.2 幾乎重合；各爬坡帶亦互相印證。唯一例外是極陡帶，樣本僅 29 公里且受高程雜訊污染，故採保守值。各帶數值見頁尾；每點停留時間由上方欄位另行輸入，不混入配速。</p>
+    </details>
+
     <footer class="colophon">
-      <b>單車騎行農民曆</b> · 版本 <b>v1.9.1</b>（2026-07-05）<br>
+      <b>小布路書</b> · Brompton Roadbook（原「單車騎行農民曆」）· 版本 <b>v2.0</b>（2026-07-05）<br>
       © 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>
       路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>
       路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16.3・緩坡12・陡坡8.2・很陡6.6・極陡4.5・下坡21.2・陡降19.7 km/h，2024–2026 Komoot 834 趟完騎有效速度校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
@@ -1127,7 +1154,7 @@ function buildGpx(){
   SEGDATA.forEach(seg=>{ (seg.geom||[]).forEach(c=>{
     trk+=`      <trkpt lat="${c[1]}" lon="${c[0]}">${c[2]!=null?`<ele>${Math.round(c[2])}</ele>`:""}</trkpt>\n`; });});
   return `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="單車騎行農民曆" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="小布路書 Brompton Roadbook" xmlns="http://www.topografix.com/GPX/1/1">
 ${wpts}
   <trk><name>${xml(pts[0]?.n||"")} → ${xml(pts[pts.length-1]?.n||"")}</name><trkseg>
 ${trk}    </trkseg></trk>
@@ -1271,7 +1298,7 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("單車騎行農民曆 v1.9.1 (2026-07-05) · Komoot 834趟有效速度校準");
+console.log("小布路書 v2.0 (2026-07-05) · 原單車騎行農民曆 · Komoot 834趟有效速度校準");
 renderWaypoints();
 renderToday();
 analyze();
