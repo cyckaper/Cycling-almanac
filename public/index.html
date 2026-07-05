@@ -35,6 +35,12 @@
   .method[open] summary::after{content:"　▴"}
   .method summary:hover{color:var(--gold)}
   .method p{font-size:13px; margin:2px 0 12px}
+  .wrap{position:relative}
+  .lang-sw{position:absolute; top:2px; right:2px; display:flex; gap:3px; z-index:5}
+  .lang-sw button{font-family:inherit; font-size:11px; letter-spacing:.08em; padding:4px 10px; border:1px solid var(--line); background:var(--card); color:var(--muted); cursor:pointer; border-radius:999px}
+  .lang-sw button.on{color:var(--ink); border-color:var(--gold)}
+  html[lang="en"] .term.today .term__name::after{content:" · today"; letter-spacing:.02em}
+  html[lang="en"] .term__verse::before{content:""}
 
   /* today term card */
   .today{display:flex; gap:16px; align-items:center; margin:26px 0 0; background:var(--card);
@@ -274,82 +280,80 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="lang-sw" role="group" aria-label="Language">
+      <button type="button" data-lang="zh">中</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ja">日</button>
+    </div>
     <header class="mast">
-      <p class="mast__ey">A Brompton Roadbook · Taiwan</p>
+      <p class="mast__ey">A Brompton Roadbook</p>
       <h1 class="mast__title">小布路書</h1>
-      <p class="mast__sub">Fold out, ride on — read the line through the day, and the season</p>
+      <p class="mast__sub" data-i18n="mastSub">Fold out, ride on — read the line through the day, and the season</p>
     </header>
 
     <div class="today" id="todayCard"></div>
 
     <div class="panel">
-      <p class="panel__k">今日騎點 · 貼上整段行程，AI 讀出沿線地點</p>
-      <textarea id="tripText" rows="3" placeholder="貼上路線敘述、遊記或地點清單，例如：花蓮車站出發，經七星潭、新城老街、佳興小吃店，進太魯閣到天祥…"></textarea>
+      <p class="panel__k" data-i18n="panelK">今日騎點 · 貼上整段行程，AI 讀出沿線地點</p>
+      <textarea id="tripText" rows="3" data-i18n-ph="phTrip" placeholder="貼上路線敘述、遊記或地點清單，例如：花蓮車站出發，經七星潭、新城老街、佳興小吃店，進太魯閣到天祥…"></textarea>
       <div class="wp-actions">
         <button class="btn-go" id="aiBtn">AI 解析路線</button>
         <span class="ai-note" id="aiNote"></span>
       </div>
-      <div class="sub-div"><span>或逐一挑選</span></div>
+      <div class="sub-div"><span data-i18n="orPick">或逐一挑選</span></div>
       <div class="wp-list" id="wpList"></div>
       <div class="combo">
-        <input id="wpInput" type="text" autocomplete="off" placeholder="輸入地名，如 花蓮車站、淡水、太魯閣… 再從清單點選">
+        <input id="wpInput" type="text" autocomplete="off" data-i18n-ph="phWp" placeholder="輸入地名，如 花蓮車站、淡水、太魯閣… 再從清單點選">
         <div class="suggest" id="suggest" hidden></div>
       </div>
       <div class="wp-actions">
-        <button class="mini-btn" id="clearBtn">清空路線</button>
+        <button class="mini-btn" id="clearBtn" data-i18n="clearBtn">清空路線</button>
       </div>
-      <p class="hint">每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。</p>
+      <p class="hint" data-i18n="hint">每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。</p>
 
       <div class="controls">
-        <div class="ctl-group"><span class="ctl-label">出發日期</span><input type="date" id="startDate" class="time-input"></div>
-        <div class="ctl-group"><span class="ctl-label">時間</span><input type="time" id="startTime" class="time-input" value="09:00" step="300"></div>
-        <div class="ctl-group"><span class="ctl-label">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label">分</span></div>
+        <div class="ctl-group"><span class="ctl-label" data-i18n="ctlDate">出發日期</span><input type="date" id="startDate" class="time-input"></div>
+        <div class="ctl-group"><span class="ctl-label" data-i18n="ctlTime">時間</span><input type="time" id="startTime" class="time-input" value="09:00" step="300"></div>
+        <div class="ctl-group"><span class="ctl-label" data-i18n="ctlDwell">每點停留</span><input type="number" id="dwell" class="num-input" value="15" min="0" max="120" step="5"><span class="ctl-label" data-i18n="unitMin">分</span></div>
         <div class="ctl-group"><button class="toggle" id="revBtn">反轉方向 ⇄</button></div>
       </div>
-      <p class="note-live">路徑／坡度／撤退依真實路網計算；天氣接 CWA 鄉鎮逐3小時預報（未設金鑰或超出預報範圍時退 Open-Meteo／示範情境，來源如實標示）</p>
+      <p class="note-live" data-i18n="noteLive">路徑／坡度／撤退依真實路網計算；天氣接 CWA 鄉鎮逐3小時預報（未設金鑰或超出預報範圍時退 Open-Meteo／示範情境，來源如實標示）</p>
     </div>
 
     <div class="verdict" id="verdict"></div>
-    <p class="disclaim" id="disclaim" hidden>⚠ 路線、坡度、天氣皆為<b>推估</b>：實際狀況因所選路段、地形與季節變化甚大，本分析僅供行前參考，出發前後請以現場路況與官方資訊為準，並自負騎乘安全。</p>
+    <p class="disclaim" id="disclaim" data-i18n-html="disclaim" hidden>⚠ 路線、坡度、天氣皆為<b>推估</b>：實際狀況因所選路段、地形與季節變化甚大，本分析僅供行前參考，出發前後請以現場路況與官方資訊為準，並自負騎乘安全。</p>
     <div id="map" class="map" hidden></div>
     <div class="route-tools" id="routeTools" hidden>
-      <button class="mini-btn" id="gpxBtn">下載 GPX</button>
-      <a class="mini-btn" id="gmapsBtn" target="_blank" rel="noopener">在 Google 地圖開啟導航</a>
+      <button class="mini-btn" id="gpxBtn" data-i18n="gpxBtn">下載 GPX</button>
+      <a class="mini-btn" id="gmapsBtn" target="_blank" rel="noopener" data-i18n="gmapsBtn">在 Google 地圖開啟導航</a>
       <span class="tools-note" id="routeMode"></span>
     </div>
     <div class="timeline" id="timeline"></div>
     <div class="legend">
-      <span><i style="background:var(--good)"></i>宜</span>
-      <span><i style="background:var(--warn)"></i>留意</span>
-      <span><i style="background:var(--risk)"></i>審慎</span>
-      <span>頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退</span>
+      <span data-i18n-html="lg_yi"><i style="background:var(--good)"></i>宜</span>
+      <span data-i18n-html="lg_warn"><i style="background:var(--warn)"></i>留意</span>
+      <span data-i18n-html="lg_risk"><i style="background:var(--risk)"></i>審慎</span>
+      <span data-i18n="lg_note">頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退</span>
     </div>
     <div class="legend legend--bands">
-      <span class="bands-k">坡度分級（每前進 100 公尺的高度變化）</span>
-      <span><i style="background:#5FA046"></i>平路 ±2%</span>
-      <span><i style="background:#B08A3E"></i>緩坡 2–5%</span>
-      <span><i style="background:#CE8418"></i>陡坡 5–8%</span>
-      <span><i style="background:#BE5027"></i>很陡 8–12%</span>
-      <span><i style="background:#8C2318"></i>極陡 逾12%</span>
-      <span><i style="background:#8FA0B5"></i>下坡 −2〜−8%</span>
-      <span><i style="background:#4A6076"></i>陡降 低於−8%</span>
+      <span class="bands-k" data-i18n="bandsK">坡度分級（每前進 100 公尺的高度變化）</span>
+      <span data-i18n-html="bl_flat"><i style="background:#5FA046"></i>平路 ±2%</span>
+      <span data-i18n-html="bl_gentle"><i style="background:#B08A3E"></i>緩坡 2–5%</span>
+      <span data-i18n-html="bl_steep"><i style="background:#CE8418"></i>陡坡 5–8%</span>
+      <span data-i18n-html="bl_vsteep"><i style="background:#BE5027"></i>很陡 8–12%</span>
+      <span data-i18n-html="bl_extreme"><i style="background:#8C2318"></i>極陡 逾12%</span>
+      <span data-i18n-html="bl_down"><i style="background:#8FA0B5"></i>下坡 −2〜−8%</span>
+      <span data-i18n-html="bl_downS"><i style="background:#4A6076"></i>陡降 低於−8%</span>
     </div>
 
     <details class="method" id="method">
-      <summary>這些時刻怎麼算？——834 趟實騎的校準方法</summary>
+      <summary data-i18n="mSummary">這些時刻怎麼算？——834 趟實騎的校準方法</summary>
+      <div data-i18n-html="mBody">
       <p>本站的抵達時刻不是理論值，而是從車主 2018–2026 年間以 Brompton 實際完成、記錄於 Komoot 的 939 趟騎乘中校準出來的。剔除非單車活動、短於 3 公里或缺時間戳的紀錄後，留下 <b>834 趟、約 31,790 公里、六百二十萬個軌跡點</b>。</p>
       <p>每條軌跡先做高程清理：沿線以 ±100 公尺視窗中位數濾波去除尖刺，再每 30 公尺重取樣、±60 公尺移動平均平滑；坡度取 ±50 公尺視窗的高差比，據此把每一小段歸入七個坡度帶——陡降（≤−8%）、下坡、平路（−2〜2%）、緩坡、陡坡、很陡、極陡（&gt;12%）。</p>
       <p>速度統計剔除近乎靜止（&lt;1.5 km/h）、GPS 突跳（&gt;80 km/h）與錄製斷點（相鄰點時距 ≥10 秒的橋接段）後，各帶採<b>有效速度＝Σ距離 ÷ Σ移動時間</b>——而非平均巡航速度：慢的路段按時間放大權重，算出來的才是「抵達時刻」真正需要的數字。樣本以近 24 個月為主，不足的帶回退全庫。</p>
-      <p>交叉驗證：全庫算得的平路有效速度 16.3 km/h，與另一趟獨立實騎量得、並通過沿線抵達時刻三分鐘誤差檢驗的 16.2 幾乎重合；各爬坡帶亦互相印證。唯一例外是極陡帶，樣本僅 29 公里且受高程雜訊污染，故採保守值。各帶數值見頁尾；每點停留時間由上方欄位另行輸入，不混入配速。</p>
+      <p>交叉驗證：全庫算得的平路有效速度 16.3 km/h，與另一趟獨立實騎量得、並通過沿線抵達時刻三分鐘誤差檢驗的 16.2 幾乎重合；各爬坡帶亦互相印證。唯一例外是極陡帶，樣本僅 29 公里且受高程雜訊污染，故採保守值。各帶數值見頁尾；每點停留時間由上方欄位另行輸入，不混入配速。</p></div>
     </details>
 
-    <footer class="colophon">
-      <b>小布路書</b> · Brompton Roadbook（原「單車騎行農民曆」）· 版本 <b>v2.0.2</b>（2026-07-05）<br>
-      © 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>
-      路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>
-      路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16.3・緩坡12・陡坡8.2・很陡6.6・極陡4.5・下坡21.2・陡降19.7 km/h，2024–2026 Komoot 834 趟完騎有效速度校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>
-      地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。
-    </footer>
+    <footer class="colophon" data-i18n-html="colophon"></footer>
   </div>
 
 <script>
@@ -405,7 +409,7 @@ async function fillElevations(list){
 function showLoading(txt){
   const v=document.getElementById('verdict');
   v.style.setProperty('--vc','var(--gold)');
-  v.innerHTML='<div class="loading"><span class="spinner"></span><span class="loading__txt">'+(txt||'查詢地點中…')+'</span></div>';
+  v.innerHTML='<div class="loading"><span class="spinner"></span><span class="loading__txt">'+(txt||tx('ldPlaces'))+'</span></div>';
   document.getElementById('timeline').innerHTML="";
 }
 
@@ -468,13 +472,13 @@ function wxSim(wz, elev, hour){
   uv=Math.max(0,Math.round(uv));
   return {temp:Math.round(temp), uv, rain:Math.round(rain), windFrom, windSpd:Math.round(windSpd)};
 }
-function cond(r){ return r>=60?"雷陣雨":r>=45?"陣雨機率高":r>=28?"多雲時陰":"多雲到晴"; }
+function cond(r){ return r>=60?tx('wxTS'):r>=45?tx('wxShwr'):r>=28?tx('wxCloudy'):tx('wxFair'); }
 
 // ---------- live weather (CWA via /api/weather, Open-Meteo fallback) ----------
-let WXMAP=new Map(), WXSRC="示範情境";
+let WXMAP=new Map(), WXSRC={k:'demo'};
 const wxKey=p=>p.lat.toFixed(3)+","+p.lng.toFixed(3);
 async function fetchWeather(){
-  WXMAP=new Map(); WXSRC="示範情境";
+  WXMAP=new Map(); WXSRC={k:'demo'};
   const pts=ROUTE.slice(0,12);
   if(!pts.length) return;
   try{
@@ -486,8 +490,7 @@ async function fetchWeather(){
       if(rec && rec.hourly && rec.hourly.time && rec.hourly.time.length) WXMAP.set(wxKey(pts[i]),rec);
     });
     const first=(j.points||[]).find(x=>x&&x.source&&x.source!=="none");
-    if(first) WXSRC = first.source==="cwa" ? `CWA 鄉鎮逐3小時（${first.label||""}等）`
-             : first.source==="open-meteo" ? "Open-Meteo（CWA 備援）" : "示範情境";
+    if(first) WXSRC = first.source==="cwa" ? {k:'cwa',l:first.label||""} : first.source==="open-meteo" ? {k:'om'} : {k:'demo'};
   }catch(e){}
 }
 function interp(times, vals, ms, circular){
@@ -568,21 +571,22 @@ function build(){
 
 // ---------- render ----------
 const fmt=m=>{m=Math.round(m);let h=Math.floor(m/60)%24,mm=((m%60)+60)%60;return String(h).padStart(2,'0')+":"+String(mm).padStart(2,'0');};
-const fmtD=m=>{const d=Math.floor(Math.round(m)/1440); return fmt(m)+(d>=1?` <span style="color:var(--risk)">(+${d}日)</span>`:"");};
+const fmtD=m=>{const d=Math.floor(Math.round(m)/1440); return fmt(m)+(d>=1?tx('daysLate')(d):"");};
 const COLOR={good:"var(--good)",warn:"var(--warn)",risk:"var(--risk)"};
 
 function renderToday(){
   const ti=termFor(new Date()), tt=TERMS[ti], col=SEASON_COLOR[tt.season];
   const c=document.getElementById('todayCard');
   c.style.setProperty('--tc',col);
+  const LT=tv(tt);
   c.innerHTML=`
     <div class="today__badge"><span class="today__ch">${tt.name}</span></div>
     <div class="today__body">
-      <p class="today__k">今日節氣</p>
-      <p class="today__verse">${tt.verse}</p>
+      <p class="today__k">${tx('todayTerm')}</p>
+      <p class="today__verse">${LT.verse}</p>
       <div class="today__yiji">
-        <span class="t"><span class="sd" style="background:var(--yi)">宜</span>${tt.yi.join(" · ")}</span>
-        <span class="t"><span class="sd" style="background:var(--ink)">忌</span>${tt.ji.join(" · ")}</span>
+        <span class="t"><span class="sd" style="background:var(--yi)">${tx('yiChar')}</span>${LT.yi.join(" · ")}</span>
+        <span class="t"><span class="sd" style="background:var(--ink)">${tx('jiChar')}</span>${LT.ji.join(" · ")}</span>
       </div>
     </div>`;
   return tt;
@@ -592,16 +596,16 @@ function renderRoute(){
   const v=document.getElementById('verdict'), tl=document.getElementById('timeline');
   if(ROUTE.length<2){
     v.style.setProperty('--vc','var(--line)');
-    v.innerHTML=`<p class="empty">打字搜尋地點、從清單挑選加入（或點熱門騎點）；加到兩個以上，就會分析今天這條路線的天時。</p>`;
+    v.innerHTML=`<p class="empty">${tx('emptyRoute')}</p>`;
     tl.innerHTML=""; return;
   }
   const rows=build();
-  const tt=TERMS[termFor(START_DATE)];
+  const tt=TERMS[termFor(START_DATE)], LT=tv(tt);
 
   let worst=rows[0]; rows.forEach(r=>{if(r.score>worst.score)worst=r;});
   const heads=rows.filter(r=>r.wind&&r.wind.kind==="head");
   const tier=worst.tier;
-  const statusText={good:"今日宜騎",warn:"可騎 · 留意時段",risk:"審慎 · 有挑戰路段"}[tier];
+  const statusText={good:tx('statusGood'),warn:tx('statusWarn'),risk:tx('statusRisk')}[tier];
 
   const nameList=(REVERSED?[...ROUTE].reverse():ROUTE).map(p=>p.n);
   const totalKm=rows.reduce((s,r)=>s+(r.seg?r.seg.dist:0),0);
@@ -610,29 +614,26 @@ function renderRoute(){
   const straight=rows.reduce((s,r,i)=>s+(i>0?haversine(rows[i-1].pt,rows[i].pt):0),0);
   const implausible = hasGeo && ROUTE.length>1 && straight/(ROUTE.length-1) > 40;
 
-  let sent=`${worst.pt.n}於 <b>${fmtD(worst.arrMin)}</b> 抵達，正逢${cond(worst.w.rain)}（降雨 ${worst.w.rain}%）、UV ${worst.w.uv}、氣溫 ${worst.w.temp}°`
-         +(worst.wind?`、${worst.wind.label} ${worst.wind.spd} km/h`:"")
-         +((worst.seg&&worst.seg.maxG>=10)?`，且抵達前路段最陡 ${worst.seg.maxG}%`:"")
-         +`，為全程最具挑戰的一段。`;
-  const headTxt=heads.length?heads.map(r=>r.pt.n).join("、")+" 頂風":"全程無明顯逆風";
+  let sent=tx('worstLine')(worst.pt.n, fmtD(worst.arrMin), cond(worst.w.rain), worst.w.rain, worst.w.uv, worst.w.temp, worst.wind, (worst.seg&&worst.seg.maxG>=10)?worst.seg.maxG:0);
+  const headTxt=heads.length?tx('headsLine')(heads.map(r=>r.pt.n)):tx('noHead');
   let rec;
   if(worst.tier==="risk"){
-    rec=`挑戰集中在 <b>${fmtD(worst.arrMin)} 的${worst.pt.n}</b>。可試著 <b>提早出發</b>、<b>縮短每點停留</b>，或 <b>反轉方向</b>，把最具挑戰路段的抵達時刻挪開午後對流。`;
+    rec=tx('recChallenge')(fmtD(worst.arrMin), worst.pt.n);
   } else {
-    rec=`目前排程的節奏尚可；若要更保險，把暴露路段的抵達時刻壓在午前最穩妥。出發日${tt.name}，${tt.verse}`;
+    rec=tx('recOk')(LT.name, LT.verse);
   }
 
   v.style.setProperty('--vc', implausible?'var(--risk)':COLOR[tier]);
   v.innerHTML=`
-    ${implausible?'<p class="route-warn">⚠ 路線總距離偏大（約 '+totalKm.toFixed(0)+' km），可能有地名被定位到錯誤位置。請在可疑地名後加上縣市或鄰近大地標，再查一次。</p>':''}
+    ${implausible?'<p class="route-warn">'+tx('implausible')(totalKm.toFixed(0))+'</p>':''}
     <p class="route-title">${nameList.join(" → ")}</p>
-    <p class="route-sub">${ROUTE.length} 點 · 約 ${totalKm.toFixed(0)} km · 爬升 ~${Math.round(totalUp/10)*10} m · 出發日${tt.name} · 天氣：${WXSRC}</p>
+    <p class="route-sub">${tx('routeSub')(ROUTE.length, totalKm.toFixed(0), Math.round(totalUp/10)*10, LT.name, wxName(WXSRC))}</p>
     <div class="verdict__top"><span class="vdot"></span><span class="vstatus">${statusText}</span></div>
     <p class="vsent">${sent}</p>
     <div class="vgrid">
-      <div class="vcell"><p class="vcell__k">最具挑戰 時段/地點</p><p class="vcell__v">${fmtD(worst.arrMin)} · ${worst.pt.n}</p></div>
-      <div class="vcell"><p class="vcell__k">風向</p><p class="vcell__v">${headTxt}</p></div>
-      <div class="vcell"><p class="vcell__k">抵達終點</p><p class="vcell__v">${fmtD(rows[rows.length-1].arrMin)} · ${rows[rows.length-1].pt.n}</p></div>
+      <div class="vcell"><p class="vcell__k">${tx('vkChallenge')}</p><p class="vcell__v">${fmtD(worst.arrMin)} · ${worst.pt.n}</p></div>
+      <div class="vcell"><p class="vcell__k">${tx('vkWind')}</p><p class="vcell__v">${headTxt}</p></div>
+      <div class="vcell"><p class="vcell__k">${tx('vkArrive')}</p><p class="vcell__v">${fmtD(rows[rows.length-1].arrMin)} · ${rows[rows.length-1].pt.n}</p></div>
     </div>
     <p class="vrec">${rec}</p>`;
 
@@ -643,44 +644,42 @@ function renderRoute(){
       const S=r.seg;
       const seg=document.createElement('div'); seg.className="tseg";
       let head=`<b>${S.dist.toFixed(1)} km</b> · ↑${Math.round(S.up)}m ↓${Math.round(S.down)}m`
-        + (r.wind?` · ${r.wind.label} ${r.wind.spd}`:"")
-        + (S.est?` · <span class="seg-est">直線推估</span>`:"");
+        + (r.wind?` · ${tx('wind_'+r.wind.kind)} ${r.wind.spd}`:"")
+        + (S.est?` · <span class="seg-est">${tx('segEst')}</span>`:"");
       let gradeHtml="";
       let gradeWarn="";
       if(S.bands){
         const mg = S.maxG>=10 ? `<b style="color:var(--risk)">${S.maxG}%</b>` : `${S.maxG}%`;
-        head += ` · 均坡 ${S.avgG}% · 最陡(連續300m) ${mg}`
-              + (S.grades&&S.grades.repaired?` <span class="seg-est">已依路名修正 ${S.grades.repaired} 段隧道／橋樑高程</span>`:"")
-              + (S.artifact?` <span class="seg-est">已濾除疑似隧道／峽谷之高程假訊</span>`:"")
-              + (S.noisy?` <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>`:"");
+        head += tx('segGrade')(S.avgG, mg)
+              + (S.grades&&S.grades.repaired?tx('segRepaired')(S.grades.repaired):"")
+              + (S.artifact?tx('segArtifact'):"")
+              + (S.noisy?tx('segNoisy'):"");
         const B=S.bands,
-              lbl={flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡",down:"下坡",downS:"陡降"},
+              lbl=tx('bands'),
               col={flat:"#5FA046",gentle:"#B08A3E",steep:"#CE8418",vsteep:"#BE5027",extreme:"#8C2318",down:"#8FA0B5",downS:"#4A6076"},
-              tip={flat:"平路：坡度 ±2% 以內",gentle:"緩坡：爬坡 2–5%",steep:"陡坡：爬坡 5–8%",
-                   vsteep:"很陡：爬坡 8–12%",extreme:"極陡：爬坡逾 12%",
-                   down:"下坡：−2% 〜 −8%",downS:"陡降：坡度低於 −8%"};
+              tip=tx('bandTips');
         const km=m=> m>=950 ? (m/1000).toFixed(1)+" km" : Math.round(m/50)*50+" m";
-        gradeHtml='<div class="grade-chips"><span class="gk" title="坡度＝每前進100公尺的高度變化比例">坡度組成</span>'
+        gradeHtml='<div class="grade-chips"><span class="gk" title="'+tx('gradeTitle')+'">'+tx('gradeComp')+'</span>'
           +["flat","gentle","steep","vsteep","extreme","down","downS"]
           .filter(k=>B[k]>=100)
           .map(k=>`<span class="gchip" style="background:${col[k]}" title="${tip[k]}">${lbl[k]} ${km(B[k])}</span>`).join("")+'</div>';
         const MC=S.mainClimb;
         if(MC && MC.gain>=60){
           const hard = MC.avg>=8 || MC.gain>=250;
-          head += ` · <span class="mainclimb${hard?' hard':''}">主爬坡 ${(MC.len/1000).toFixed(1)} km ↑${Math.round(MC.gain)}m（均 ${MC.avg.toFixed(1)}%）</span>`;
+          head += ` · <span class="mainclimb${hard?' hard':''}">${tx('mainClimb')((MC.len/1000).toFixed(1),Math.round(MC.gain),MC.avg.toFixed(1))}</span>`;
         }
         if(S.maxG>=10 || (MC && MC.avg>=9 && MC.gain>=150))
-          gradeWarn=`<div class="grade-warn">⚠ 陡坡提醒：${MC&&MC.avg>=9&&MC.gain>=150?`主爬坡 ${(MC.len/1000).toFixed(1)} 公里平均 <b>${MC.avg.toFixed(1)}%</b>（爬升 ${Math.round(MC.gain)}m）`:""}${S.maxG>=10?`${MC&&MC.avg>=9&&MC.gain>=150?"；":""}連續 300 公尺最陡達 <b>${S.maxG}%</b>`:""}，宜預留體力、提早降檔${S.bands.downS>=300?"；下坡段請控制車速":""}</div>`;
+          gradeWarn=`<div class="grade-warn">${tx('gwHead')}${MC&&MC.avg>=9&&MC.gain>=150?tx('gwMain')((MC.len/1000).toFixed(1),MC.avg.toFixed(1),Math.round(MC.gain)):""}${S.maxG>=10?`${MC&&MC.avg>=9&&MC.gain>=150?tx('gwJoin'):""}`+tx('gwMax')(S.maxG):""}${tx('gwTail')}${S.bands.downS>=300?tx('gwDown'):""}</div>`;
       }
       // 路網終點與目的地高程落差（如桃源谷：可騎道路盡頭之後為步道）
       if(!S.est && S.grades && r.pt && isFinite(r.pt.elev)){
         const endEle=S.grades.profile[S.grades.profile.length-1].e;
         const gap=r.pt.elev-endEle;
-        if(gap>60) head += ` <span class="seg-est">路網可騎至約 ${Math.round(endEle)}m；至${r.pt.n}尚有 ~${Math.round(gap)}m 爬升屬步道／扛車段</span>`;
+        if(gap>60) head += tx('segGap')(Math.round(endEle), r.pt.n, Math.round(gap));
       }
       const cvId="cv"+i;
       const stepsHtml = S.steps && S.steps.length
-        ? `<button class="steps-tg" data-tg="st${i}">逐步指示（${S.steps.length}）</button>
+        ? `<button class="steps-tg" data-tg="st${i}">${tx('steps')(S.steps.length)}</button>
            <ul class="steps-list" id="st${i}" hidden>${S.steps.map(s=>`<li>${s.instruction}${s.distance?` <span style="color:var(--muted)">· ${s.distance>=1000?(s.distance/1000).toFixed(1)+" km":s.distance+" m"}</span>`:""}</li>`).join("")}</ul>`
         : "";
       seg.innerHTML=`<div class="tseg__inner">${head}${gradeHtml}${gradeWarn}`
@@ -695,20 +694,20 @@ function renderRoute(){
     const sheltered=["basin","valley","lake"], exposedZ=["coast","exposed"];
     if(i>0 && sheltered.includes(prevWz) && exposedZ.includes(wz)){
       const rg=document.createElement('div'); rg.className="regime";
-      rg.innerHTML=`<div class="regime__b">⚑ 遮蔽 → 暴露：離開遮蔽地形，進入開闊／濱海／高地，風雨自此見真章</div>`;
+      rg.innerHTML=`<div class="regime__b">${tx('regime')}</div>`;
       tl.appendChild(rg);
     }
     const w=r.w, wind=r.wind;
     const rainCls=w.rain>=60?"hi":w.rain>=28?"mid":"";
     const uvCls=w.uv>=10?"hi":"";
     const escSvg=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15h16M6 15V7a2 2 0 012-2h8a2 2 0 012 2v8M8 19v2M16 19v2M9 11h6"/></svg>`;
-    const windPill=wind?`<span class="pill pill--wind ${wind.kind}"><span class="warr" style="transform:rotate(${wind.rot}deg)"></span>${wind.label} ${wind.spd} km/h</span>`:"";
+    const windPill=wind?`<span class="pill pill--wind ${wind.kind}"><span class="warr" style="transform:rotate(${wind.rot}deg)"></span>${tx('wind_'+wind.kind)} ${wind.spd} km/h</span>`:"";
     const node=document.createElement('div'); node.className="tnode"; node.style.setProperty('--sc',COLOR[r.tier]);
     node.style.animationDelay=(Math.min(i,10)*70)+"ms";
     const rt = r.pt.retreat;
     const escTxt = rt
-      ? `轉進機會：${rt.st}（${rt.road?"路網":"估"} ${rt.km} km）${rt.hard?" · 距離偏遠":""}`
-      : `轉進機會：${r.pt.esc.st}${r.pt.esc.km>0&&!r.pt.esc.hard?`（${r.pt.esc.km} km）`:""}`;
+      ? tx('retreatRt')(staFmtRt(rt.st), rt.road?tx('rtRoad'):tx('rtEst'), rt.km, rt.hard)
+              : tx('retreatEsc')(r.pt.esc.st, (r.pt.esc.km>0&&!r.pt.esc.hard)?r.pt.esc.km:0);
     const escHard = rt ? rt.hard : r.pt.esc.hard;
     node.innerHTML=`
       <span class="tdot"></span>
@@ -727,17 +726,314 @@ function renderRoute(){
 }
 
 // ================= waypoint builder (autocomplete + chips) =================
+
+/* ================= i18n (zh / en / ja) ================= */
+const I18N = {
+zh:{
+ title:"小布路書 · Brompton 路線天時",
+ mastSub:"Fold out, ride on — read the line through the day, and the season",
+ panelK:"今日騎點 · 貼上整段行程，AI 讀出沿線地點",
+ phTrip:"貼上路線敘述、遊記或地點清單，例如：花蓮車站出發，經七星潭、新城老街、佳興小吃店，進太魯閣到天祥…",
+ aiBtn:"AI 解析路線", aiBusy:"AI 解析中…",
+ orPick:"或逐一挑選",
+ phWp:"輸入地名，如 花蓮車站、淡水、太魯閣… 再從清單點選",
+ clearBtn:"清空路線",
+ hint:"每個地點都從清單挑選、帶有確定座標，所以不會認錯地名或定位到錯的地方。",
+ ctlDate:"出發日期", ctlTime:"時間", ctlDwell:"每點停留", unitMin:"分",
+ revOff:"反轉方向 ⇄", revOn:"已反轉方向 ⇄",
+ noteLive:"路徑／坡度／撤退依真實路網計算；天氣接 CWA 鄉鎮逐3小時預報（未設金鑰或超出預報範圍時退 Open-Meteo／示範情境，來源如實標示）",
+ disclaim:"⚠ 路線、坡度、天氣皆為<b>推估</b>：實際狀況因所選路段、地形與季節變化甚大，本分析僅供行前參考，出發前後請以現場路況與官方資訊為準，並自負騎乘安全。",
+ gpxBtn:"下載 GPX", gmapsBtn:"在 Google 地圖開啟導航",
+ lg_yi:'<i style="background:var(--good)"></i>宜', lg_warn:'<i style="background:var(--warn)"></i>留意', lg_risk:'<i style="background:var(--risk)"></i>審慎',
+ lg_note:"頂風＝逆風而行 · 順風＝風助前進 · 轉進＝就近搭車撤退",
+ bandsK:"坡度分級（每前進 100 公尺的高度變化）",
+ bl_flat:'<i style="background:#5FA046"></i>平路 ±2%', bl_gentle:'<i style="background:#B08A3E"></i>緩坡 2–5%',
+ bl_steep:'<i style="background:#CE8418"></i>陡坡 5–8%', bl_vsteep:'<i style="background:#BE5027"></i>很陡 8–12%',
+ bl_extreme:'<i style="background:#8C2318"></i>極陡 逾12%', bl_down:'<i style="background:#8FA0B5"></i>下坡 −2〜−8%',
+ bl_downS:'<i style="background:#4A6076"></i>陡降 低於−8%',
+ mSummary:"這些時刻怎麼算？——834 趟實騎的校準方法",
+ mBody:"<p>本站的抵達時刻不是理論值，而是從車主 2018–2026 年間以 Brompton 實際完成、記錄於 Komoot 的 939 趟騎乘中校準出來的。剔除非單車活動、短於 3 公里或缺時間戳的紀錄後，留下 <b>834 趟、約 31,790 公里、六百二十萬個軌跡點</b>。</p><p>每條軌跡先做高程清理：沿線以 ±100 公尺視窗中位數濾波去除尖刺，再每 30 公尺重取樣、±60 公尺移動平均平滑；坡度取 ±50 公尺視窗的高差比，據此把每一小段歸入七個坡度帶——陡降（≤−8%）、下坡、平路（−2〜2%）、緩坡、陡坡、很陡、極陡（&gt;12%）。</p><p>速度統計剔除近乎靜止（&lt;1.5 km/h）、GPS 突跳（&gt;80 km/h）與錄製斷點（相鄰點時距 ≥10 秒的橋接段）後，各帶採<b>有效速度＝Σ距離 ÷ Σ移動時間</b>——而非平均巡航速度：慢的路段按時間放大權重，算出來的才是「抵達時刻」真正需要的數字。樣本以近 24 個月為主，不足的帶回退全庫。</p><p>交叉驗證：全庫算得的平路有效速度 16.3 km/h，與另一趟獨立實騎量得、並通過沿線抵達時刻三分鐘誤差檢驗的 16.2 幾乎重合；各爬坡帶亦互相印證。唯一例外是極陡帶，樣本僅 29 公里且受高程雜訊污染，故採保守值。各帶數值見頁尾；每點停留時間由上方欄位另行輸入，不混入配速。</p>",
+ colophon:'<b>小布路書</b> · Brompton Roadbook（原「單車騎行農民曆」）· 版本 <b>v2.1</b>（2026-07-05）<br>© 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16.3・緩坡12・陡坡8.2・很陡6.6・極陡4.5・下坡21.2・陡降19.7 km/h，2024–2026 Komoot 834 趟完騎有效速度校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。',
+ todayTerm:"今日節氣", yiChar:"宜", jiChar:"忌",
+ emptyRoute:"打字搜尋地點、從清單挑選加入（或點熱門騎點）；加到兩個以上，就會分析今天這條路線的天時。",
+ statusGood:"今日宜騎", statusWarn:"可騎 · 留意時段", statusRisk:"審慎 · 有挑戰路段",
+ wind_head:"頂風", wind_tail:"順風", wind_cross:"側風",
+ wxTS:"雷陣雨", wxShwr:"陣雨機率高", wxCloudy:"多雲時陰", wxFair:"多雲到晴",
+ wxDemo:"示範情境", wxOM:"Open-Meteo（CWA 備援）", wxCwa:l=>`CWA 鄉鎮逐3小時（${l}等）`,
+ daysLate:d=>` <span style="color:var(--risk)">(+${d}日)</span>`,
+ worstLine:(n,tm,cd,rain,uv,temp,wind,mg)=>`${n}於 <b>${tm}</b> 抵達，正逢${cd}（降雨 ${rain}%）、UV ${uv}、氣溫 ${temp}°`+(wind?`、${tx('wind_'+wind.kind)} ${wind.spd} km/h`:"")+(mg?`，且抵達前路段最陡 ${mg}%`:"")+`，為全程最具挑戰的一段。`,
+ headsLine:a=>a.join("、")+" 頂風", noHead:"全程無明顯逆風",
+ recChallenge:(tm,n)=>`挑戰集中在 <b>${tm} 的${n}</b>。可試著 <b>提早出發</b>、<b>縮短每點停留</b>，或 <b>反轉方向</b>，把最具挑戰路段的抵達時刻挪開午後對流。`,
+ recOk:(nm,vs)=>`目前排程的節奏尚可；若要更保險，把暴露路段的抵達時刻壓在午前最穩妥。出發日${nm}，${vs}`,
+ implausible:km=>`⚠ 路線總距離偏大（約 ${km} km），可能有地名被定位到錯誤位置。請在可疑地名後加上縣市或鄰近大地標，再查一次。`,
+ routeSub:(n,km,up,nm,wx)=>`${n} 點 · 約 ${km} km · 爬升 ~${up} m · 出發日${nm} · 天氣：${wx}`,
+ vkChallenge:"最具挑戰 時段/地點", vkWind:"風向", vkArrive:"抵達終點",
+ segEst:"直線推估",
+ segGrade:(a,m)=>` · 均坡 ${a}% · 最陡(連續300m) ${m}`,
+ segRepaired:n=>` <span class="seg-est">已依路名修正 ${n} 段隧道／橋樑高程</span>`,
+ segArtifact:' <span class="seg-est">已濾除疑似隧道／峽谷之高程假訊</span>',
+ segNoisy:' <span class="seg-est">海拔資料疑受峽谷／隧道影響</span>',
+ gradeComp:"坡度組成", gradeTitle:"坡度＝每前進100公尺的高度變化比例",
+ bands:{flat:"平路",gentle:"緩坡",steep:"陡坡",vsteep:"很陡",extreme:"極陡",down:"下坡",downS:"陡降"},
+ bandTips:{flat:"平路：坡度 ±2% 以內",gentle:"緩坡：爬坡 2–5%",steep:"陡坡：爬坡 5–8%",vsteep:"很陡：爬坡 8–12%",extreme:"極陡：爬坡逾 12%",down:"下坡：−2% 〜 −8%",downS:"陡降：坡度低於 −8%"},
+ mainClimb:(km,g,a)=>`主爬坡 ${km} km ↑${g}m（均 ${a}%）`,
+ gwHead:"⚠ 陡坡提醒：", gwJoin:"；", gwMain:(km,a,g)=>`主爬坡 ${km} 公里平均 <b>${a}%</b>（爬升 ${g}m）`,
+ gwMax:m=>`連續 300 公尺最陡達 <b>${m}%</b>`, gwTail:"，宜預留體力、提早降檔", gwDown:"；下坡段請控制車速",
+ segGap:(e,n,g)=>` <span class="seg-est">路網可騎至約 ${e}m；至${n}尚有 ~${g}m 爬升屬步道／扛車段</span>`,
+ steps:n=>`逐步指示（${n}）`,
+ regime:"⚑ 遮蔽 → 暴露：離開遮蔽地形，進入開闊／濱海／高地，風雨自此見真章",
+ retreatRt:(st,md,km,hd)=>`轉進機會：${st}（${md} ${km} km）${hd?" · 距離偏遠":""}`,
+ rtRoad:"路網", rtEst:"估",
+ retreatEsc:(st,km)=>`轉進機會：${st}${km?`（${km} km）`:""}`,
+ staType:{"台鐵":"台鐵","捷運":"捷運"}, staFmt:(ty,nm)=>`${ty} ${nm}站`,
+ ldPlaces:"查詢地點中…", ldElev:"整理海拔中…", ldWx:"取得逐時天氣中…", ldRetreat:"計算各點撤退車站中…",
+ ldWxDate:"依出發日期重取天氣中…",
+ ldRoute:(i,n,a,b)=>`規劃路徑 ${i} / ${n}：${a} → ${b}`,
+ ldLocate:(i,n,nm)=>`定位 ${i} / ${n}：${nm}`,
+ liveReal:"路徑、距離與坡度皆依真實路網計算", livePart:"部分路段為直線推估（路網服務未回應）",
+ liveNoKey:"目前為直線推估模式 — 部署 ORS_API_KEY 後即為真實路網",
+ liveAt:h=>` · 本次計算於 ${h}，每次查詢皆重新取得路網、坡度與天氣`,
+ errFn:"無法連線 AI 解析服務 — 請確認已部署 Netlify Functions",
+ errDeploy:"AI 解析服務未部署 — 請依 README 部署 Functions 並設定 ANTHROPIC_API_KEY",
+ errFmt:"AI 回應格式異常", errNone:"AI 沒有從文字中讀出地點，換段文字試試",
+ aiMissed:a=>"認得但定不了位、已略過："+a.join("、"), aiOk:n=>`已讀出 ${n} 個地點`,
+ escHere:"（即在此）", escPending:"—（附近車站待接 TDX）",
+ tagSpot:"騎點", tagPlace:"地名",
+ sugMore:"查詢更多地點…", sugErr:"外部地名查詢無回應，僅顯示內建騎點與車站", sugNone:"找不到相符地點，換個關鍵字試試",
+ gpxFile:"騎行路線.gpx"
+},
+en:{
+ title:"Xiaobu Roadbook · Brompton route & weather",
+ mastSub:"Fold out, ride on — read the line through the day, and the season",
+ panelK:"Today's ride · Paste a whole trip, AI reads out the waypoints",
+ phTrip:"Paste a route description, travel notes, or a list of places, e.g. Start at Hualien Station, via Qixingtan, Xincheng Old Street, into Taroko to Tianxiang…",
+ aiBtn:"Parse route with AI", aiBusy:"AI parsing…",
+ orPick:"or pick one by one",
+ phWp:"Type a place name, e.g. 淡水, 太魯閣, Hualien Station… then pick from the list",
+ clearBtn:"Clear route",
+ hint:"Every waypoint is picked from a list with verified coordinates, so names are never misread or mislocated.",
+ ctlDate:"Date", ctlTime:"Start", ctlDwell:"Stop per point", unitMin:"min",
+ revOff:"Reverse direction ⇄", revOn:"Direction reversed ⇄",
+ noteLive:"Routes, grades and bail-outs use the real road network; weather uses CWA township 3-hourly forecasts (falls back to Open-Meteo / demo when no key or out of range — source always shown).",
+ disclaim:"⚠ Routes, grades and weather are <b>estimates</b>: real conditions vary greatly with roads, terrain and season. This analysis is for planning only — check conditions and official forecasts before and during your ride, and ride at your own risk.",
+ gpxBtn:"Download GPX", gmapsBtn:"Open in Google Maps",
+ lg_yi:'<i style="background:var(--good)"></i>Good', lg_warn:'<i style="background:var(--warn)"></i>Caution', lg_risk:'<i style="background:var(--risk)"></i>Care',
+ lg_note:"Headwind = riding into the wind · Tailwind = wind at your back · Bail-out = nearest station retreat",
+ bandsK:"Grade bands (elevation change per 100 m travelled)",
+ bl_flat:'<i style="background:#5FA046"></i>Flat ±2%', bl_gentle:'<i style="background:#B08A3E"></i>Gentle 2–5%',
+ bl_steep:'<i style="background:#CE8418"></i>Steep 5–8%', bl_vsteep:'<i style="background:#BE5027"></i>V-steep 8–12%',
+ bl_extreme:'<i style="background:#8C2318"></i>Extreme >12%', bl_down:'<i style="background:#8FA0B5"></i>Down −2〜−8%',
+ bl_downS:'<i style="background:#4A6076"></i>Steep down <−8%',
+ mSummary:"How are these times computed? — calibrated on 834 real rides",
+ mBody:"<p>Arrival times here are not theoretical. They are calibrated from 939 rides the owner actually completed on a Brompton between 2018–2026, recorded on Komoot. After removing non-cycling activities, rides under 3 km, and files without timestamps, <b>834 rides remain — about 31,790 km and 6.2 million track points</b>.</p><p>Each track first gets elevation cleaning: a ±100 m median filter along the line removes spikes, then 30 m resampling and a ±60 m moving average smooth the profile; grade is taken over a ±50 m window, and every short segment is assigned to one of seven bands — steep descent (≤−8%), downhill, flat (−2〜2%), gentle, steep, very steep, extreme (&gt;12%).</p><p>After excluding near-standstill samples (&lt;1.5 km/h), GPS spikes (&gt;80 km/h) and recording gaps (bridged segments with ≥10 s between points), each band uses <b>effective speed = Σdistance ÷ Σmoving time</b> — not average cruising speed: slow stretches are weighted by time, which is exactly what an arrival time needs. Samples favour the last 24 months, falling back to the full library where thin.</p><p>Cross-check: the library-wide flat effective speed of 16.3 km/h almost exactly matches 16.2 measured independently on a single ride that passed a 3-minute arrival-time test; climbing bands corroborate each other likewise. The one exception is the extreme band — only 29 km of noisy samples — so a conservative value is used. Band values are in the footer; stop time per waypoint is entered above and never mixed into pace.</p>",
+ colophon:'<b>小布路書</b> · Xiaobu Roadbook — a Brompton Roadbook (formerly “A Cyclist’s Almanac”) · Version <b>v2.1</b> (2026-07-05)<br>© 2026 Chang Chun-Yen · HEALS Design · All rights reserved<br>Routes, grades and weather are estimates for reference only; assess riding safety yourself.<br>Fallback route length = straight-line × 1.3; climb = elevation gap + per-km undulation. ETA uses graded pace (flat 16.3 · gentle 12 · steep 8.2 · v-steep 6.6 · extreme 4.5 · down 21.2 · steep-down 19.7 km/h, effective speeds calibrated on 834 Komoot rides 2024–2026) plus stop time per waypoint; head/tailwind from segment bearing vs. hourly wind.<br>Geocoding by Open-Meteo Geocoding & OpenStreetMap Nominatim; elevation by Open-Meteo. Demo weather is illustrative — trust the day’s forecast and conditions on the road.',
+ todayTerm:"Today's solar term", yiChar:"Do", jiChar:"Skip",
+ emptyRoute:"Type to search places and add them from the list (or tap a popular spot); with two or more, today's conditions along the line are analysed.",
+ statusGood:"A good day to ride", statusWarn:"Rideable · mind the timing", statusRisk:"Ride with care · challenging section",
+ wind_head:"Headwind", wind_tail:"Tailwind", wind_cross:"Crosswind",
+ wxTS:"thunderstorms", wxShwr:"likely showers", wxCloudy:"mostly cloudy", wxFair:"partly sunny",
+ wxDemo:"demo scenario", wxOM:"Open-Meteo (CWA fallback)", wxCwa:l=>`CWA township 3-hourly (${l} etc.)`,
+ daysLate:d=>` <span style="color:var(--risk)">(+${d}d)</span>`,
+ worstLine:(n,tm,cd,rain,uv,temp,wind,mg)=>`${n} at <b>${tm}</b> meets ${cd} (rain ${rain}%), UV ${uv}, ${temp}°`+(wind?`, ${tx('wind_'+wind.kind).toLowerCase()} ${wind.spd} km/h`:"")+(mg?`, with grades up to ${mg}% just before`:"")+` — the most demanding stretch of the day.`,
+ headsLine:a=>"Headwind at "+a.join(", "), noHead:"No significant headwind",
+ recChallenge:(tm,n)=>`The challenge concentrates at <b>${n}, ${tm}</b>. Try <b>starting earlier</b>, <b>shortening stops</b>, or <b>reversing direction</b> to move that arrival away from afternoon convection.`,
+ recOk:(nm,vs)=>`The schedule looks reasonable; to be safe, land the exposed stretches before noon. Departing on ${nm} — ${vs}`,
+ implausible:km=>`⚠ Total distance looks too large (~${km} km) — a place may be mislocated. Add a county/city or nearby landmark after the doubtful name and search again.`,
+ routeSub:(n,km,up,nm,wx)=>`${n} stops · ~${km} km · climb ~${up} m · departing on ${nm} · weather: ${wx}`,
+ vkChallenge:"Toughest time/place", vkWind:"Wind", vkArrive:"Finish",
+ segEst:"straight-line estimate",
+ segGrade:(a,m)=>` · avg ${a}% · steepest (300 m) ${m}`,
+ segRepaired:n=>` <span class="seg-est">${n} tunnel/bridge section(s) corrected by road name</span>`,
+ segArtifact:' <span class="seg-est">suspected tunnel/canyon elevation artifacts filtered</span>',
+ segNoisy:' <span class="seg-est">elevation may be affected by canyon/tunnel</span>',
+ gradeComp:"Grade mix", gradeTitle:"Grade = elevation change per 100 m travelled",
+ bands:{flat:"Flat",gentle:"Gentle",steep:"Steep",vsteep:"V-steep",extreme:"Extreme",down:"Down",downS:"Steep down"},
+ bandTips:{flat:"Flat: within ±2%",gentle:"Gentle: 2–5% climb",steep:"Steep: 5–8% climb",vsteep:"Very steep: 8–12% climb",extreme:"Extreme: over 12%",down:"Downhill: −2% to −8%",downS:"Steep descent: below −8%"},
+ mainClimb:(km,g,a)=>`Main climb ${km} km ↑${g}m (avg ${a}%)`,
+ gwHead:"⚠ Grade alert: ", gwJoin:"; ", gwMain:(km,a,g)=>`main climb ${km} km averaging <b>${a}%</b> (↑${g}m)`,
+ gwMax:m=>`steepest 300 m reaches <b>${m}%</b>`, gwTail:" — pace yourself and shift early", gwDown:"; control your speed on the descents",
+ segGap:(e,n,g)=>` <span class="seg-est">rideable road ends near ${e}m; the last ~${g}m of climb to ${n} is trail / hike-a-bike</span>`,
+ steps:n=>`Turn-by-turn (${n})`,
+ regime:"⚑ Sheltered → exposed: leaving sheltered terrain for open / coastal / high ground — wind and rain get real from here",
+ retreatRt:(st,md,km,hd)=>`Bail-out: ${st} (${md} ${km} km)${hd?" · far":""}`,
+ rtRoad:"road", rtEst:"est.",
+ retreatEsc:(st,km)=>`Bail-out: ${st}${km?` (${km} km)`:""}`,
+ staType:{"台鐵":"TRA","捷運":"Metro"}, staFmt:(ty,nm)=>`${nm} Sta. (${ty})`,
+ ldPlaces:"Searching places…", ldElev:"Preparing elevations…", ldWx:"Fetching hourly weather…", ldRetreat:"Computing bail-out stations…",
+ ldWxDate:"Refetching weather for the new date…",
+ ldRoute:(i,n,a,b)=>`Routing ${i} / ${n}: ${a} → ${b}`,
+ ldLocate:(i,n,nm)=>`Locating ${i} / ${n}: ${nm}`,
+ liveReal:"Routes, distances and grades use the real road network", livePart:"Some legs are straight-line estimates (routing service unavailable)",
+ liveNoKey:"Straight-line estimate mode — deploy ORS_API_KEY for real road routing",
+ liveAt:h=>` · computed at ${h}; every query refetches routes, grades and weather`,
+ errFn:"Cannot reach the AI parsing service — check that Netlify Functions are deployed",
+ errDeploy:"AI parsing not deployed — deploy Functions per README and set ANTHROPIC_API_KEY",
+ errFmt:"Unexpected AI response format", errNone:"AI found no places in that text — try another passage",
+ aiMissed:a=>"Recognised but couldn't locate, skipped: "+a.join(", "), aiOk:n=>`Read ${n} places`,
+ escHere:" (right here)", escPending:"— (nearby stations pending TDX)",
+ tagSpot:"spot", tagPlace:"place",
+ sugMore:"Searching more places…", sugErr:"External geocoding unavailable — showing built-in spots and stations only", sugNone:"No matching place — try another keyword",
+ gpxFile:"brompton-route.gpx"
+},
+ja:{
+ title:"小布路書 · ブロンプトン ルートと天時",
+ mastSub:"折りたたんで、走り出す——一日と季節の線を読む",
+ panelK:"今日の走行 · 行程を貼るだけで、AIが経由地を読み取る",
+ phTrip:"ルートの説明・旅行記・地名リストを貼り付け。例：花蓮駅を出発、七星潭、新城老街、佳興小吃店を経て、太魯閣から天祥へ…",
+ aiBtn:"AIでルート解析", aiBusy:"AI解析中…",
+ orPick:"または一つずつ選ぶ",
+ phWp:"地名を入力（例：淡水、太魯閣、花蓮車站…）候補から選択",
+ clearBtn:"ルートを消去",
+ hint:"経由地はすべて候補リストから選ばれ、確定座標付き。地名の誤認・誤位置は起きません。",
+ ctlDate:"出発日", ctlTime:"時刻", ctlDwell:"各地点の滞在", unitMin:"分",
+ revOff:"方向を反転 ⇄", revOn:"反転済み ⇄",
+ noteLive:"ルート／勾配／退避は実路網で計算。天気は CWA 郷鎮3時間予報（キー未設定・範囲外は Open-Meteo／デモにフォールバック。出典は常に表示）",
+ disclaim:"⚠ ルート・勾配・天気はすべて<b>推定</b>です。実際の状況は道路・地形・季節で大きく変わります。本分析は計画の参考用であり、出発前後は現地の状況と公式予報を優先し、安全は自己責任でお願いします。",
+ gpxBtn:"GPX をダウンロード", gmapsBtn:"Google マップで開く",
+ lg_yi:'<i style="background:var(--good)"></i>宜', lg_warn:'<i style="background:var(--warn)"></i>注意', lg_risk:'<i style="background:var(--risk)"></i>慎重',
+ lg_note:"向かい風＝風に逆らう · 追い風＝風が押す · 退避＝最寄り駅へ離脱",
+ bandsK:"勾配区分（100 m 進むごとの高度変化）",
+ bl_flat:'<i style="background:#5FA046"></i>平坦 ±2%', bl_gentle:'<i style="background:#B08A3E"></i>緩坂 2–5%',
+ bl_steep:'<i style="background:#CE8418"></i>急坂 5–8%', bl_vsteep:'<i style="background:#BE5027"></i>激坂 8–12%',
+ bl_extreme:'<i style="background:#8C2318"></i>極坂 12%超', bl_down:'<i style="background:#8FA0B5"></i>下り −2〜−8%',
+ bl_downS:'<i style="background:#4A6076"></i>急降 −8%未満',
+ mSummary:"この到着時刻はどう計算？——実走834本による校正",
+ mBody:"<p>本サイトの到着時刻は理論値ではありません。オーナーが 2018–2026 年に Brompton で実際に完走し Komoot に記録した 939 本の走行から校正されています。自転車以外・3 km 未満・タイムスタンプ欠落を除き、<b>834 本・約 31,790 km・620 万トラックポイント</b>が残りました。</p><p>各トラックはまず標高クリーニング：沿線 ±100 m の中央値フィルタでスパイクを除去し、30 m ごとに再サンプル、±60 m 移動平均で平滑化。勾配は ±50 m 窓で取り、各区間を七つの帯——急降（≤−8%）・下り・平坦（−2〜2%）・緩坂・急坂・激坂・極坂（&gt;12%）——に振り分けます。</p><p>ほぼ静止（&lt;1.5 km/h）、GPS スパイク（&gt;80 km/h）、記録ギャップ（隣接点間 ≥10 秒のブリッジ区間）を除外した上で、各帯は<b>有効速度＝Σ距離 ÷ Σ移動時間</b>を採用——平均巡航速度ではありません。遅い区間ほど時間で重みが増し、それこそが「到着時刻」に必要な数字です。標本は直近 24 か月を主とし、不足帯は全期間で補完。</p><p>相互検証：全データの平坦有効速度 16.3 km/h は、独立した一本の実走で測られ沿線到着 3 分誤差の検証を通った 16.2 とほぼ一致。登坂帯も互いに整合します。唯一の例外は極坂帯（標本 29 km・ノイズ混入）で、保守値を採用。各帯の値はフッター参照。各地点の滞在時間は上の欄で別入力され、ペースには混ぜません。</p>",
+ colophon:'<b>小布路書</b> · ブロンプトン・ロードブック（旧「単車騎行農民暦」）· バージョン <b>v2.1</b>（2026-07-05）<br>© 2026 Chang Chun-Yen · HEALS Design · 無断転載を禁じます<br>ルート・勾配・天気は推定であり参考情報です。走行の安全はご自身で判断してください。<br>簡易時：距離＝直線 × 1.3、獲得標高＝標高差＋km あたり起伏。ETA は勾配別ペース（平坦16.3・緩坂12・急坂8.2・激坂6.6・極坂4.5・下り21.2・急降19.7 km/h、2024–2026 Komoot 実走834本の有効速度で校正）と各地点滞在から算出。向かい風／追い風は区間方位と毎時風向の差。<br>地名は Open-Meteo Geocoding と OpenStreetMap Nominatim、標高は Open-Meteo。デモ天気は例示であり、当日の予報と現地の風雨を優先してください。',
+ todayTerm:"今日の節気", yiChar:"宜", jiChar:"忌",
+ emptyRoute:"地名を入力して候補から追加（人気スポットのタップでも可）。2 地点以上で、今日のこのルートの天時を分析します。",
+ statusGood:"本日、走るに宜し", statusWarn:"走行可 · 時間帯に注意", statusRisk:"慎重に · 難所あり",
+ wind_head:"向かい風", wind_tail:"追い風", wind_cross:"横風",
+ wxTS:"雷雨", wxShwr:"にわか雨の可能性大", wxCloudy:"曇りがち", wxFair:"晴れ間あり",
+ wxDemo:"デモシナリオ", wxOM:"Open-Meteo（CWA代替）", wxCwa:l=>`CWA 郷鎮3時間予報（${l}など）`,
+ daysLate:d=>` <span style="color:var(--risk)">(+${d}日)</span>`,
+ worstLine:(n,tm,cd,rain,uv,temp,wind,mg)=>`${n}に <b>${tm}</b> 到着。ちょうど${cd}（降水 ${rain}%）、UV ${uv}、気温 ${temp}°`+(wind?`、${tx('wind_'+wind.kind)} ${wind.spd} km/h`:"")+(mg?`、直前区間の最大勾配 ${mg}%`:"")+`——本日いちばんの難所です。`,
+ headsLine:a=>a.join("、")+" で向かい風", noHead:"全行程で目立つ向かい風なし",
+ recChallenge:(tm,n)=>`難所は <b>${tm} の${n}</b> に集中。<b>早出</b>、<b>滞在短縮</b>、<b>方向反転</b>で、到着を午後の対流から外しましょう。`,
+ recOk:(nm,vs)=>`現在のペース配分は良好。より安全には、露出区間の到着を午前中に。出発日は${nm}——${vs}`,
+ implausible:km=>`⚠ 総距離が大きすぎます（約 ${km} km）。地名が誤位置の可能性——疑わしい地名に県市や大きな目印を添えて再検索してください。`,
+ routeSub:(n,km,up,nm,wx)=>`${n} 地点 · 約 ${km} km · 獲得 ~${up} m · 出発日 ${nm} · 天気：${wx}`,
+ vkChallenge:"最難の時刻/地点", vkWind:"風", vkArrive:"ゴール",
+ segEst:"直線推定",
+ segGrade:(a,m)=>` · 平均 ${a}% · 最急(連続300m) ${m}`,
+ segRepaired:n=>` <span class="seg-est">道路名によりトンネル／橋 ${n} 区間の標高を補正</span>`,
+ segArtifact:' <span class="seg-est">トンネル／峡谷由来と思われる標高ノイズを除去</span>',
+ segNoisy:' <span class="seg-est">標高データに峡谷／トンネルの影響の疑い</span>',
+ gradeComp:"勾配構成", gradeTitle:"勾配＝100 m 進むごとの高度変化率",
+ bands:{flat:"平坦",gentle:"緩坂",steep:"急坂",vsteep:"激坂",extreme:"極坂",down:"下り",downS:"急降"},
+ bandTips:{flat:"平坦：±2% 以内",gentle:"緩坂：2–5%",steep:"急坂：5–8%",vsteep:"激坂：8–12%",extreme:"極坂：12% 超",down:"下り：−2%〜−8%",downS:"急降：−8% 未満"},
+ mainClimb:(km,g,a)=>`主登坂 ${km} km ↑${g}m（平均 ${a}%）`,
+ gwHead:"⚠ 急勾配注意：", gwJoin:"；", gwMain:(km,a,g)=>`主登坂 ${km} km 平均 <b>${a}%</b>（↑${g}m）`,
+ gwMax:m=>`連続 300 m の最大勾配 <b>${m}%</b>`, gwTail:"。体力を温存し早めのシフトを", gwDown:"。下りは速度を抑えて",
+ segGap:(e,n,g)=>` <span class="seg-est">車道は約 ${e}m 地点まで。${n}までの残り ~${g}m は徒歩／担ぎ区間</span>`,
+ steps:n=>`ターンバイターン（${n}）`,
+ regime:"⚑ 遮蔽 → 露出：遮られた地形を抜け、開けた／海沿い／高所へ。風雨はここから本番",
+ retreatRt:(st,md,km,hd)=>`退避：${st}（${md} ${km} km）${hd?" · やや遠い":""}`,
+ rtRoad:"路網", rtEst:"推定",
+ retreatEsc:(st,km)=>`退避：${st}${km?`（${km} km）`:""}`,
+ staType:{"台鐵":"台鉄","捷運":"MRT"}, staFmt:(ty,nm)=>`${ty} ${nm}駅`,
+ ldPlaces:"地点を検索中…", ldElev:"標高を整理中…", ldWx:"毎時天気を取得中…", ldRetreat:"各地点の退避駅を計算中…",
+ ldWxDate:"出発日で天気を再取得中…",
+ ldRoute:(i,n,a,b)=>`ルート計算 ${i} / ${n}：${a} → ${b}`,
+ ldLocate:(i,n,nm)=>`位置特定 ${i} / ${n}：${nm}`,
+ liveReal:"ルート・距離・勾配は実路網で計算", livePart:"一部区間は直線推定（路網サービス無応答）",
+ liveNoKey:"直線推定モード — ORS_API_KEY を設定すると実路網に",
+ liveAt:h=>` · 計算時刻 ${h}。照会のたびに路網・勾配・天気を再取得`,
+ errFn:"AI 解析サービスに接続できません — Netlify Functions の配備を確認",
+ errDeploy:"AI 解析が未配備 — README に従い Functions と ANTHROPIC_API_KEY を設定",
+ errFmt:"AI 応答の形式が不正", errNone:"AI が地名を読み取れませんでした。別の文章でお試しを",
+ aiMissed:a=>"認識したが位置特定できずスキップ："+a.join("、"), aiOk:n=>`${n} 地点を読み取りました`,
+ escHere:"（当地）", escPending:"—（近隣駅は TDX 接続待ち）",
+ tagSpot:"スポット", tagPlace:"地点",
+ sugMore:"さらに検索中…", sugErr:"外部地名検索が無応答 — 内蔵スポットと駅のみ表示", sugNone:"該当なし — 別のキーワードでお試しを",
+ gpxFile:"brompton-route.gpx"
+}};
+const TERMS_L={
+en:{
+"立春":{n:"Start of Spring",yi:["Short warm-up rides","Easy riverside spins"],ji:["Overreaching epics"],v:"Wheels not yet warm — build the legs first."},
+"雨水":{n:"Rain Water",yi:["Ride the rain breaks","Slow city loops"],ji:["Hard braking in rain","Speeding downhill"],v:"Wet roads ride like thin ice — slow beats sorry."},
+"驚蟄":{n:"Awakening of Insects",yi:["First long rides","Visit spring gardens"],ji:["Cold starts, no warm-up"],v:"The body has thawed; the heart should head out too."},
+"春分":{n:"Spring Equinox",yi:["All-day distance","Ride with company"],ji:["Nothing to avoid"],v:"Day and night in balance — ride the middle way."},
+"清明":{n:"Clear and Bright",yi:["Multi-day tours","Old trails and family visits"],ji:["Wasting this fine spell"],v:"If not a long tour now, then when?"},
+"穀雨":{n:"Grain Rain",yi:["Tung blossoms in the hills","Beat the coming rains"],ji:["Ignoring afternoon storms"],v:"Catch the last dry days before the plum rains."},
+"立夏":{n:"Start of Summer",yi:["Dawn departures","Carry rain gear"],ji:["Midday sun exposure"],v:"Summer's gate is open — the season of racing the rain."},
+"小滿":{n:"Grain Buds",yi:["Short rides in rain windows","Watch the rivers"],ji:["Low creekside roads before storms"],v:"Ride before the waters fill; turn home as they rise."},
+"芒種":{n:"Grain in Ear",yi:["Ride both ends of the day","Flame trees in bloom"],ji:["Noon on open levees"],v:"When the sun turns fierce, retreat to dawn and dusk."},
+"夏至":{n:"Summer Solstice",yi:["Earliest starts","Use the long light"],ji:["Afternoon exposure"],v:"Longest day, shortest shadow — ride where the sun is not."},
+"小暑":{n:"Minor Heat",yi:["Watch the typhoons","Seize the clear windows"],ji:["Heading out as storms close in"],v:"Read the sky — and the forecast more."},
+"大暑":{n:"Major Heat",yi:["Out by first light","Climb to cooler air (Wuling)"],ji:["Lowland noon"],v:"The plains are a furnace — take the bike uphill."},
+"立秋":{n:"Start of Autumn",yi:["Between-typhoon windows","Cool evening rides"],ji:["Rivers before and after typhoons"],v:"Autumn in name; heat and typhoons remain."},
+"處暑":{n:"End of Heat",yi:["Dusk rides","Riverside cool-downs"],ji:["Trusting 'autumn' under full sun"],v:"The heat is leaving; coolness waits in line."},
+"白露":{n:"White Dew",yi:["Misty riverside mornings","Add thin long sleeves"],ji:["Underdressing for the chill"],v:"The dew has whitened — give your arms a layer."},
+"秋分":{n:"Autumn Equinox",yi:["Long tours","Far rides with friends"],ji:["Missing this clear spell"],v:"Before the winds rise, ride the far roads full."},
+"寒露":{n:"Cold Dew",yi:["Leeward routes","Ride toward the sun"],ji:["Grinding into headwinds"],v:"The northeast wind is here — choose sheltered roads."},
+"霜降":{n:"Frost's Descent",yi:["Warm midday hours","Pack a windbreaker"],ji:["Cold dawn headwinds"],v:"The wind has an edge — ride the warm hours."},
+"立冬":{n:"Start of Winter",yi:["Seize the sunny days","Layer up"],ji:["Wet cold headwind epics"],v:"Winter's door is closing — ride while it shines."},
+"小雪":{n:"Minor Snow",yi:["Sunny river stretches","Short warm-ups"],ji:["Cold rain and headwinds"],v:"No snow here — only the wet and the wind."},
+"大雪":{n:"Major Snow",yi:["Short rides in clear windows","Finish with something warm"],ji:["Long rides into the cold"],v:"Between the name and the fact lies Taiwan's humour."},
+"冬至":{n:"Winter Solstice",yi:["Short rides, early returns","Tangyuan afterwards"],ji:["Riding home in the dark"],v:"Shortest day — home early, warm early."},
+"小寒":{n:"Minor Cold",yi:["Chase the sun south","Warm rides in Taitung"],ji:["Cold-front headwinds"],v:"When the north turns cold, point the bars south."},
+"大寒":{n:"Major Cold",yi:["Southbound for warmth","Sun-chasing in Taitung"],ji:["Cold snaps on high ground"],v:"The coldest square — and the eve of the wheel turning back to spring."}
+},
+ja:{
+"立春":{n:"立春",yi:["短めのウォームアップ","河川敷をゆるく"],ji:["無理な遠征"],v:"車輪より先に、脚を温めよ。"},
+"雨水":{n:"雨水",yi:["雨の切れ間に出る","市街をゆっくり"],ji:["雨中の急ブレーキ","下りの飛ばしすぎ"],v:"濡れた路面は薄氷。急がば緩めよ。"},
+"驚蟄":{n:"啓蟄",yi:["解凍のロングライド","春の庭園めぐり"],ji:["体が冷えたままの朝出"],v:"体が解けたら、心も外へ。"},
+"春分":{n:"春分",yi:["終日のロングライド","仲間と走る"],ji:["忌なし"],v:"昼夜半ば、道もほどよく。"},
+"清明":{n:"清明",yi:["数日の縦走","古道めぐりと墓参"],ji:["この晴天を無駄に"],v:"いま縦走せずして、いつ走る。"},
+"穀雨":{n:"穀雨",yi:["山あいの桐の花見","雨の前に走り込む"],ji:["午後の雷雨を侮る"],v:"梅雨入り前の乾いた日を惜しめ。"},
+"立夏":{n:"立夏",yi:["早朝に出発","雨具を携行"],ji:["真昼の炎天走"],v:"夏の門は開いた。雨と競走の季節。"},
+"小滿":{n:"小満",yi:["雨の合間の短距離","河川敷で水を見る"],ji:["雷雨前の低地・川沿い"],v:"水満ちる前に走り、満ちなば帰る。"},
+"芒種":{n:"芒種",yi:["朝夕の二部走","鳳凰木の花見"],ji:["真昼の堤防道"],v:"日差しが牙をむけば、朝夕へ退く。"},
+"夏至":{n:"夏至",yi:["夜明け前に出る","長い日を使い切る"],ji:["午後の直射"],v:"日は最も長く、影は最も短し。日を避けて走れ。"},
+"小暑":{n:"小暑",yi:["台風情報を注視","晴れ間を逃さない"],ji:["荒天間際の出発"],v:"空を読むより、まず予報を読め。"},
+"大暑":{n:"大暑",yi:["夜明けとともに","山へ避暑（武嶺・中横）"],ji:["平地の正午"],v:"平地は竈。車輪ごと山へ上れ。"},
+"立秋":{n:"立秋",yi:["台風の間隙を突く","夕涼みライド"],ji:["台風前後の川沿い"],v:"秋は名のみ、暑さと台風は居座る。"},
+"處暑":{n:"処暑",yi:["黄昏ライド","河川敷で涼む"],ji:["秋と信じて炎天へ"],v:"暑気は退場、涼はまだ列の中。"},
+"白露":{n:"白露",yi:["朝霧の河川敷","薄手の長袖を"],ji:["薄着で涼を貪る"],v:"露白し。腕に一枚を足せ。"},
+"秋分":{n:"秋分",yi:["ロングツーリング","仲間と遠出"],ji:["この晴朗を逃す"],v:"風立つ前に、遠い道を走り尽くせ。"},
+"寒露":{n:"寒露",yi:["風下ルート","日向へ走る"],ji:["向かい風に力押し"],v:"風は北東より。道は風裏を選べ。"},
+"霜降":{n:"霜降",yi:["昼の暖かい時間に","ウインドブレーカーを"],ji:["寒暁の向かい風"],v:"風が鋭い。暖かい刻を選んで走れ。"},
+"立冬":{n:"立冬",yi:["晴れの日を逃さない","重ね着で"],ji:["湿冷の向かい風遠征"],v:"冬の戸は閉じかけ。晴れたら走れ。"},
+"小雪":{n:"小雪",yi:["日の当たる川沿い","短めに温まる"],ji:["冷雨と向かい風"],v:"ここに雪はなく、湿りと風のみ。"},
+"大雪":{n:"大雪",yi:["晴れ間に短く","温かい締めを"],ji:["欲張って冷える"],v:"名と実のあわい、それが台湾の妙。"},
+"冬至":{n:"冬至",yi:["短距離で早帰り","湯圓で温まる"],ji:["日暮れの遠帰り"],v:"日は最も短し。早く帰り、早く温まれ。"},
+"小寒":{n:"小寒",yi:["南へ日を追う","台東で温か走"],ji:["寒波の向かい風"],v:"北が冷えたら、ハンドルは南へ。"},
+"大寒":{n:"大寒",yi:["南部へ暖を求め","台東で日を追う"],ji:["寒波の高地"],v:"最も寒い一齣は、輪が春へ回る前夜。"}
+}};
+let LANG=(()=>{try{const s=localStorage.getItem('xb_lang');if(s&&I18N[s])return s;}catch(e){}
+ const n=(navigator.language||'').toLowerCase();return n.startsWith('zh')?'zh':n.startsWith('ja')?'ja':'en';})();
+const tx=k=>{const d=I18N[LANG]||I18N.zh;return (k in d)?d[k]:I18N.zh[k];};
+const tv=tt=>{if(LANG==='zh')return tt;const L=(TERMS_L[LANG]||{})[tt.name]||{};
+ return {name:L.n||tt.name,yi:L.yi||tt.yi,ji:L.ji||tt.ji,verse:L.v||tt.verse,season:tt.season};};
+function applyStatic(){
+ document.documentElement.lang = LANG==='zh'?'zh-Hant':LANG;
+ document.title = tx('title');
+ document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=tx(el.dataset.i18n);});
+ document.querySelectorAll('[data-i18n-html]').forEach(el=>{el.innerHTML=tx(el.dataset.i18nHtml);});
+ document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=tx(el.dataset.i18nPh);});
+ const rb=document.getElementById('revBtn'); if(rb) rb.textContent = REVERSED?tx('revOn'):tx('revOff');
+ const ab=document.getElementById('aiBtn'); if(ab && !ab.disabled) ab.textContent=tx('aiBtn');
+ document.querySelectorAll('.lang-sw button').forEach(b=>b.classList.toggle('on',b.dataset.lang===LANG));
+}
+function setLang(l){ if(!I18N[l]||l===LANG) return; LANG=l;
+ try{localStorage.setItem('xb_lang',l);}catch(e){}
+ applyStatic(); renderToday(); renderWaypoints(); renderRoute(); }
+/* ================= /i18n ================= */
+const wxName=s=>!s?"":(typeof s==='string')?s:s.k==='cwa'?tx('wxCwa')(s.l):s.k==='om'?tx('wxOM'):tx('wxDemo');
+const staFmtRt=st=>(st&&st.ty)?tx('staFmt')(tx('staType')[st.ty]||st.ty,st.nm):st;
+
 let ANALYZE_SEQ=0;
 async function analyze(){
   const seq=++ANALYZE_SEQ;
   if(WAYPOINTS.length<2){ ROUTE=[]; SEGDATA=[]; renderRoute(); return; }
-  if(WAYPOINTS.some(w=>w.elev===null)){ showLoading("整理海拔中…"); await fillElevations(WAYPOINTS); }
+  if(WAYPOINTS.some(w=>w.elev===null)){ showLoading(tx('ldElev')); await fillElevations(WAYPOINTS); }
   if(seq!==ANALYZE_SEQ) return;
   ROUTE=WAYPOINTS.slice();
   await routeAll();            if(seq!==ANALYZE_SEQ) return;
-  showLoading("取得逐時天氣中…");
+  showLoading(tx('ldWx'));
   await fetchWeather();        if(seq!==ANALYZE_SEQ) return;
-  showLoading("計算各點撤退車站中…");
+  showLoading(tx('ldRetreat'));
   await computeRetreats();     if(seq!==ANALYZE_SEQ) return;
   renderRoute();
   renderMap();
@@ -935,7 +1231,7 @@ async function routeAll(){
   SEGDATA=[]; let anyReal=false, anyEst=false;
   const pts = REVERSED ? [...ROUTE].reverse() : ROUTE.slice();
   for(let i=1;i<pts.length;i++){
-    showLoading(`規劃路徑 ${i} / ${pts.length-1}：${pts[i-1].n} → ${pts[i].n}`);
+    showLoading(tx('ldRoute')(i, pts.length-1, pts[i-1].n, pts[i].n));
     const seg = await routeSegment(pts[i-1],pts[i]) || estSegment(pts[i-1],pts[i]);
     seg.est ? anyEst=true : anyReal=true;
     SEGDATA.push(seg);
@@ -943,9 +1239,9 @@ async function routeAll(){
   const modeEl=document.getElementById('routeMode');
   const stamp=new Date(), hhmm=String(stamp.getHours()).padStart(2,"0")+":"+String(stamp.getMinutes()).padStart(2,"0");
   if(modeEl) modeEl.textContent = (anyReal
-    ? (anyEst? "部分路段為直線推估（路網服務未回應）" : "路徑、距離與坡度皆依真實路網計算")
-    : "目前為直線推估模式 — 部署 ORS_API_KEY 後即為真實路網")
-    + ` · 本次計算於 ${hhmm}，每次查詢皆重新取得路網、坡度與天氣`;
+    ? (anyEst? tx('livePart') : tx('liveReal'))
+      : tx('liveNoKey'))
+    + tx('liveAt')(hhmm);
 }
 
 // ---------- retreat points via road-distance matrix ----------
@@ -978,7 +1274,7 @@ async function computeRetreats(){
     }
     if(best){
       const km=best.d/1000;
-      p.retreat={ st:`${best.s[3]} ${best.s[0]}站`, km:Math.round(km*10)/10,
+      p.retreat={ st:{ty:best.s[3],nm:best.s[0]}, km:Math.round(km*10)/10,
                   road:best.road, hard:km>8 };
     }
   });
@@ -988,22 +1284,22 @@ async function computeRetreats(){
 async function aiParse(){
   const ta=document.getElementById('tripText'), btn=document.getElementById('aiBtn'), note=document.getElementById('aiNote');
   const text=ta.value.trim(); if(!text) return;
-  btn.disabled=true; btn.textContent="AI 解析中…"; note.className="ai-note"; note.textContent="";
-  showLoading("AI 讀取路線中…");
+  btn.disabled=true; btn.textContent=tx('aiBusy'); note.className="ai-note"; note.textContent="";
+  showLoading(tx('aiBusy'));
   const fail=(msg)=>{ note.className="ai-note err"; note.textContent=msg;
-    btn.disabled=false; btn.textContent="AI 解析路線"; ROUTE=[]; renderRoute(); };
+    btn.disabled=false; btn.textContent=tx('aiBtn'); ROUTE=[]; renderRoute(); };
   let resp;
   try{ resp=await fetch(API('/api/extract'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); }
-  catch(e){ return fail("無法連線 AI 解析服務 — 請確認已部署 Netlify Functions"); }
-  if(resp.status===404) return fail("AI 解析服務未部署 — 請依 README 部署 Functions 並設定 ANTHROPIC_API_KEY");
+  catch(e){ return fail(tx('errFn')); }
+  if(resp.status===404) return fail(tx('errDeploy'));
   const j=await resp.json().catch(()=>null);
-  if(!j || j.error || !Array.isArray(j.waypoints)) return fail(j&&j.error ? j.error : "AI 回應格式異常");
-  if(!j.waypoints.length) return fail("AI 沒有從文字中讀出地點，換段文字試試");
+  if(!j || j.error || !Array.isArray(j.waypoints)) return fail(j&&j.error ? j.error : tx('errFmt'));
+  if(!j.waypoints.length) return fail(tx('errNone'));
 
   const located=[], missed=[]; let last=null;
   for(let i=0;i<j.waypoints.length;i++){
     const wpt=j.waypoints[i];
-    showLoading(`定位 ${i+1} / ${j.waypoints.length}：${wpt.name}`);
+    showLoading(tx('ldLocate')(i+1, j.waypoints.length, wpt.name));
     let w=null;
     const loc=localMatches(wpt.name);
     if(loc.length){
@@ -1022,8 +1318,8 @@ async function aiParse(){
     if(w){ located.push(w); last=w; } else missed.push(wpt.name);
   }
   WAYPOINTS=located; renderWaypoints();
-  note.textContent = missed.length ? "認得但定不了位、已略過："+missed.join("、") : `已讀出 ${located.length} 個地點`;
-  btn.disabled=false; btn.textContent="AI 解析路線";
+  note.textContent = missed.length ? tx('aiMissed')(missed) : tx('aiOk')(located.length);
+  btn.disabled=false; btn.textContent=tx('aiBtn');
   analyze();
 }
 
@@ -1154,7 +1450,7 @@ function downloadGpx(){
   if(!SEGDATA.length) return;
   const blob=new Blob([buildGpx()],{type:"application/gpx+xml"});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download="騎行路線.gpx"; document.body.appendChild(a); a.click();
+  a.download=tx('gpxFile'); document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
 }
 function gmapsUrl(){
@@ -1221,11 +1517,11 @@ function drawSuggest(items, loading, err){
   let html="";
   items.forEach((it,idx)=>{
     const tagCls = it.kind==="gaz"?"local": it.kind==="sta"?"sta":"";
-    html+=`<div class="sug-item${idx===0?' active':''}" data-i="${idx}"><span class="nm">${it.n}</span><span class="tag ${tagCls}">${it.tag||it.region||"地名"}</span></div>`;
+    html+=`<div class="sug-item${idx===0?' active':''}" data-i="${idx}"><span class="nm">${it.n}</span><span class="tag ${tagCls}">${it.kind==="sta"?(tx('staType')[it.tag]||it.tag):it.kind==="gaz"?tx('tagSpot'):(it.tag||it.region||tx('tagPlace'))}</span></div>`;
   });
-  if(loading) html+=`<div class="sug-note"><span class="sug-spin"></span>查詢更多地點…</div>`;
-  else if(err) html+=`<div class="sug-note">外部地名查詢無回應，僅顯示內建騎點與車站</div>`;
-  else if(!items.length) html+=`<div class="sug-note">找不到相符地點，換個關鍵字試試</div>`;
+  if(loading) html+=`<div class="sug-note"><span class="sug-spin"></span>${tx('sugMore')}</div>`;
+  else if(err) html+=`<div class="sug-note">${tx('sugErr')}</div>`;
+  else if(!items.length) html+=`<div class="sug-note">${tx('sugNone')}</div>`;
   suggestEl.innerHTML=html; suggestEl.hidden=false;
   suggestEl.querySelectorAll('.sug-item').forEach(el=>{
     el.addEventListener('click',()=>pick(+el.dataset.i));
@@ -1268,7 +1564,7 @@ document.getElementById('startDate').addEventListener('input', async e=>{
   const v=e.target.value; if(!v) return;
   const d=new Date(v+"T00:00:00"); if(isNaN(d)) return;
   START_DATE=d;
-  if(ROUTE.length>=2){ showLoading("依出發日期重取天氣中…"); await fetchWeather(); }
+  if(ROUTE.length>=2){ showLoading(tx('ldWxDate')); await fetchWeather(); }
   renderRoute();
 });
 document.getElementById('startTime').addEventListener('input',e=>{
@@ -1280,14 +1576,16 @@ document.getElementById('dwell').addEventListener('input',e=>{
 });
 document.getElementById('revBtn').addEventListener('click',e=>{
   REVERSED=!REVERSED; e.currentTarget.classList.toggle('on',REVERSED);
-  e.currentTarget.textContent=REVERSED?"已反轉方向 ⇄":"反轉方向 ⇄";
+  e.currentTarget.textContent=REVERSED?tx('revOn'):tx('revOff');
   renderRoute();
 });
 
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("小布路書 v2.0.2 (2026-07-05) · 原單車騎行農民曆 · Komoot 834趟有效速度校準");
+console.log("小布路書 v2.1 (2026-07-05) · zh/en/ja · Komoot 834趟有效速度校準");
+document.querySelectorAll('.lang-sw button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+applyStatic();
 renderWaypoints();
 renderToday();
 analyze();
