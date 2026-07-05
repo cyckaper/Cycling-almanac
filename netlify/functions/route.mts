@@ -12,20 +12,22 @@ export default async (req) => {
     return json({ error: "coordinates 需為 2–5 個 [lng,lat]" }, 400);
   }
 
-  const profile = body.profile === "cycling-road" ? "cycling-road" : "cycling-regular";
+  const want = body.profile === "cycling-regular" ? "cycling-regular" : "cycling-road";
+  const call = async (profile) => fetch(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "Authorization": key },
+    body: JSON.stringify({
+      coordinates: coords,
+      elevation: true,
+      instructions: true,
+      language: "zh-cn", // ORS 尚無 zh-TW；下方以字表轉為繁體
+      units: "m",
+    }),
+  });
   let r;
   try {
-    r = await fetch(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "Authorization": key },
-      body: JSON.stringify({
-        coordinates: coords,
-        elevation: true,
-        instructions: true,
-        language: "zh-cn", // ORS 尚無 zh-TW；簡中指示可讀，README 有註記
-        units: "m",
-      }),
-    });
+    r = await call(want);                        // 預設公路車模式：避開登山步道與劣質路面
+    if (!r.ok && want === "cycling-road") r = await call("cycling-regular");
   } catch (e) {
     return json({ error: "無法連線 OpenRouteService：" + e.message }, 502);
   }
@@ -39,7 +41,7 @@ export default async (req) => {
 
   const seg = (f.properties.segments && f.properties.segments[0]) || {};
   const steps = (seg.steps || []).map(s => ({
-    instruction: s.instruction, distance: Math.round(s.distance), name: s.name || "",
+    instruction: s2t(s.instruction), distance: Math.round(s.distance), name: s2t(s.name || ""),
   }));
   return json({
     distance: seg.distance ?? f.properties.summary?.distance ?? 0,   // 公尺
@@ -50,6 +52,14 @@ export default async (req) => {
     steps,
   });
 };
+
+// ORS 指示模板為簡體，逐字轉為繁體（涵蓋其指令詞彙與常見路名用字）
+const S2T = {"进":"進","转":"轉","继":"繼","续":"續","环":"環","岛":"島","后":"後","离":"離","开":"開",
+  "达":"達","侧":"側","号":"號","车":"車","线":"線","弯":"彎","处":"處","终":"終","点":"點","于":"於",
+  "沿":"沿","东":"東","汇":"匯","并":"併","坏":"壞","过":"過","桥":"橋","顺":"順","头":"頭","联":"聯",
+  "极":"極","陆":"陸","经":"經","风":"風","张":"張","湾":"灣","乐":"樂","门":"門","观":"觀","广":"廣",
+  "庄":"莊","坚":"堅","龙":"龍","凤":"鳳","鸡":"雞","鸟":"鳥","乡":"鄉","镇":"鎮","县":"縣","区":"區"};
+function s2t(s){ return String(s).replace(/[\u4e00-\u9fff]/g, ch => S2T[ch] || ch); }
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
