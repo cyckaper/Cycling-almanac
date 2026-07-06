@@ -9,12 +9,9 @@ export default async (req) => {
   if (pts.length < 2) return json({ nodes: [] });
   const radius = Math.min(400, Math.max(100, +body.radius || 250));
   const chain = pts.map(p => `${(+p[0]).toFixed(4)},${(+p[1]).toFixed(4)}`).join(",");
-  const F = f => `nwr[${f}](around:${radius},${chain});`;
-  const ql = `[out:json][timeout:8];(` +
-    F("shop=convenience") + F("amenity=toilets") + F("amenity=drinking_water") +
-    `);out center 350;`;
+  const ql = `[out:json][timeout:8];nwr[~"^(shop|amenity)$"~"^(convenience|toilets|drinking_water)$"](around:${radius},${chain});out center 350;`;
 
-  const eps = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+  const eps = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.osm.jp/api/interpreter"];
   const attempt = async (ep) => {
     const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8500);
     try {
