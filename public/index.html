@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>小布路書 · Brompton 路線天時</title>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 52" fill="none" stroke="%232A2622" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="40" r="9"/><circle cx="62" cy="40" r="9"/><path d="M62 40 58 22 55.5 6"/><path d="M55.5 6C55 1.5 50 1.5 49 5.5"/><path d="M57.5 25C50 29.5 41 31 33 31.5"/><path d="M34.5 39.5 29 9M23.5 8 31.5 8"/><path d="M34.5 39.5 14 40"/></svg>'>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F3EEE2">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
@@ -277,7 +280,12 @@
     .searchbar{flex-direction:column}
     .btn-go{padding:12px 0}
   }
-</style>
+  .snap-bar{display:flex; align-items:center; gap:10px; margin:12px 0 0; font-size:13px; color:var(--muted); flex-wrap:wrap}
+  .snap-bar .snap-meta{letter-spacing:.02em}
+  .sup-line{font-size:12.5px; color:var(--muted); margin-top:7px}
+  .sup-line .sup-k{color:var(--pine); font-weight:600; margin-right:6px}
+  .sup-line .sup-warn{color:var(--risk); font-weight:600; margin-left:6px}
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -322,6 +330,7 @@
     <div class="verdict" id="verdict"></div>
     <p class="disclaim" id="disclaim" data-i18n-html="disclaim" hidden>⚠ 路線、坡度、天氣皆為<b>推估</b>：實際狀況因所選路段、地形與季節變化甚大，本分析僅供行前參考，出發前後請以現場路況與官方資訊為準，並自負騎乘安全。</p>
     <div id="map" class="map" hidden></div>
+    <div class="snap-bar" id="snapBar" hidden></div>
     <div class="route-tools" id="routeTools" hidden>
       <button class="mini-btn" id="gpxBtn" data-i18n="gpxBtn">下載 GPX</button>
       <a class="mini-btn" id="gmapsBtn" target="_blank" rel="noopener" data-i18n="gmapsBtn">在 Google 地圖開啟導航</a>
@@ -683,7 +692,7 @@ function renderRoute(){
         ? `<button class="steps-tg" data-tg="st${i}">${tx('steps')(S.steps.length)}</button>
            <ul class="steps-list" id="st${i}" hidden>${S.steps.map(s=>`<li>${s.instruction}${s.distance?` <span style="color:var(--muted)">· ${s.distance>=1000?(s.distance/1000).toFixed(1)+" km":s.distance+" m"}</span>`:""}</li>`).join("")}</ul>`
         : "";
-      seg.innerHTML=`<div class="tseg__inner">${head}${gradeHtml}${gradeWarn}`
+      seg.innerHTML=`<div class="tseg__inner">${head}${gradeHtml}${gradeWarn}${supHtml(S)}`
         + (S.grades?`<canvas class="elevcv" id="${cvId}"></canvas>`:"")
         + stepsHtml + `</div>`;
       tl.appendChild(seg);
@@ -754,7 +763,7 @@ zh:{
  bl_downS:'<i style="background:#4A6076"></i>陡降 低於−8%',
  mSummary:"這些時刻怎麼算？——834 趟實騎的校準方法",
  mBody:"<p>本站的抵達時刻不是理論值，而是從車主 2018–2026 年間以 Brompton 實際完成、記錄於 Komoot 的 939 趟騎乘中校準出來的。剔除非單車活動、短於 3 公里或缺時間戳的紀錄後，留下 <b>834 趟、約 31,790 公里、六百二十萬個軌跡點</b>。</p><p>每條軌跡先做高程清理：沿線以 ±100 公尺視窗中位數濾波去除尖刺，再每 30 公尺重取樣、±60 公尺移動平均平滑；坡度取 ±50 公尺視窗的高差比，據此把每一小段歸入七個坡度帶——陡降（≤−8%）、下坡、平路（−2〜2%）、緩坡、陡坡、很陡、極陡（&gt;12%）。</p><p>速度統計剔除近乎靜止（&lt;1.5 km/h）、GPS 突跳（&gt;80 km/h）與錄製斷點（相鄰點時距 ≥10 秒的橋接段）後，各帶採<b>有效速度＝Σ距離 ÷ Σ移動時間</b>——而非平均巡航速度：慢的路段按時間放大權重，算出來的才是「抵達時刻」真正需要的數字。樣本以近 24 個月為主，不足的帶回退全庫。</p><p>交叉驗證：全庫算得的平路有效速度 16.3 km/h，與另一趟獨立實騎量得、並通過沿線抵達時刻三分鐘誤差檢驗的 16.2 幾乎重合；各爬坡帶亦互相印證。唯一例外是極陡帶，樣本僅 29 公里且受高程雜訊污染，故採保守值。各帶數值見頁尾；每點停留時間由上方欄位另行輸入，不混入配速。</p>",
- colophon:'<b>小布路書</b> · Brompton Roadbook（原「單車騎行農民曆」）· 版本 <b>v2.1.1</b>（2026-07-06）<br>© 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16.3・緩坡12・陡坡8.2・很陡6.6・極陡4.5・下坡21.2・陡降19.7 km/h，2024–2026 Komoot 834 趟完騎有效速度校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。',
+ colophon:'<b>小布路書</b> · Brompton Roadbook（原「單車騎行農民曆」）· 版本 <b>v2.2</b>（2026-07-06）<br>© 2026 Chang Chun-Yen · HEALS Design · 版權所有，未經授權請勿轉載<br>路線、坡度、天氣皆為推估，僅供參考；騎乘安全請自行評估。<br>路線距離＝直線距離 × 1.3 迂迴係數；爬升＝海拔差 + 每公里起伏估算；ETA 依坡度分段配速（平路16.3・緩坡12・陡坡8.2・很陡6.6・極陡4.5・下坡21.2・陡降19.7 km/h，2024–2026 Komoot 834 趟完騎有效速度校準）與每點停留推算；頂／順風由每段方位角與當時風向相減。<br>地名座標來自 Open-Meteo Geocoding 與 OpenStreetMap Nominatim、海拔來自 Open-Meteo；天氣為示範情境，實際以出發當日之逐時預報與現場風雨為準。',
  todayTerm:"今日節氣", yiChar:"宜", jiChar:"忌",
  emptyRoute:"打字搜尋地點、從清單挑選加入（或點熱門騎點）；加到兩個以上，就會分析今天這條路線的天時。",
  statusGood:"今日宜騎", statusWarn:"可騎 · 留意時段", statusRisk:"審慎 · 有挑戰路段",
@@ -801,6 +810,8 @@ zh:{
  escHere:"（即在此）", escPending:"—（附近車站待接 TDX）",
  tagSpot:"騎點", tagPlace:"地名",
  sugMore:"查詢更多地點…", sugErr:"外部地名查詢無回應，僅顯示內建騎點與車站", sugNone:"找不到相符地點，換個關鍵字試試",
+ ldSupply:"蒐集沿線補給點中…", supplyK:"補給", supStore:"超商", supWater:"飲水", supToilet:"公廁",
+ supGap:g=>`最長 ${g} km 無補給`, supNone:"沿線無補給點", snapBtn:"還原上次分析", snapOffline:"離線模式",
  gpxFile:"騎行路線.gpx"
 },
 en:{
@@ -827,7 +838,7 @@ en:{
  bl_downS:'<i style="background:#4A6076"></i>Steep down <−8%',
  mSummary:"How are these times computed? — calibrated on 834 real rides",
  mBody:"<p>Arrival times here are not theoretical. They are calibrated from 939 rides the owner actually completed on a Brompton between 2018–2026, recorded on Komoot. After removing non-cycling activities, rides under 3 km, and files without timestamps, <b>834 rides remain — about 31,790 km and 6.2 million track points</b>.</p><p>Each track first gets elevation cleaning: a ±100 m median filter along the line removes spikes, then 30 m resampling and a ±60 m moving average smooth the profile; grade is taken over a ±50 m window, and every short segment is assigned to one of seven bands — steep descent (≤−8%), downhill, flat (−2〜2%), gentle, steep, very steep, extreme (&gt;12%).</p><p>After excluding near-standstill samples (&lt;1.5 km/h), GPS spikes (&gt;80 km/h) and recording gaps (bridged segments with ≥10 s between points), each band uses <b>effective speed = Σdistance ÷ Σmoving time</b> — not average cruising speed: slow stretches are weighted by time, which is exactly what an arrival time needs. Samples favour the last 24 months, falling back to the full library where thin.</p><p>Cross-check: the library-wide flat effective speed of 16.3 km/h almost exactly matches 16.2 measured independently on a single ride that passed a 3-minute arrival-time test; climbing bands corroborate each other likewise. The one exception is the extreme band — only 29 km of noisy samples — so a conservative value is used. Band values are in the footer; stop time per waypoint is entered above and never mixed into pace.</p>",
- colophon:'<b>小布路書</b> · Xiaobu Roadbook — a Brompton Roadbook (formerly “A Cyclist’s Almanac”) · Version <b>v2.1.1</b> (2026-07-06)<br>© 2026 Chang Chun-Yen · HEALS Design · All rights reserved<br>Routes, grades and weather are estimates for reference only; assess riding safety yourself.<br>Fallback route length = straight-line × 1.3; climb = elevation gap + per-km undulation. ETA uses graded pace (flat 16.3 · gentle 12 · steep 8.2 · v-steep 6.6 · extreme 4.5 · down 21.2 · steep-down 19.7 km/h, effective speeds calibrated on 834 Komoot rides 2024–2026) plus stop time per waypoint; head/tailwind from segment bearing vs. hourly wind.<br>Geocoding by Open-Meteo Geocoding & OpenStreetMap Nominatim; elevation by Open-Meteo. Demo weather is illustrative — trust the day’s forecast and conditions on the road.',
+ colophon:'<b>小布路書</b> · Xiaobu Roadbook — a Brompton Roadbook (formerly “A Cyclist’s Almanac”) · Version <b>v2.2</b> (2026-07-06)<br>© 2026 Chang Chun-Yen · HEALS Design · All rights reserved<br>Routes, grades and weather are estimates for reference only; assess riding safety yourself.<br>Fallback route length = straight-line × 1.3; climb = elevation gap + per-km undulation. ETA uses graded pace (flat 16.3 · gentle 12 · steep 8.2 · v-steep 6.6 · extreme 4.5 · down 21.2 · steep-down 19.7 km/h, effective speeds calibrated on 834 Komoot rides 2024–2026) plus stop time per waypoint; head/tailwind from segment bearing vs. hourly wind.<br>Geocoding by Open-Meteo Geocoding & OpenStreetMap Nominatim; elevation by Open-Meteo. Demo weather is illustrative — trust the day’s forecast and conditions on the road.',
  todayTerm:"Today's solar term", yiChar:"Do", jiChar:"Skip",
  emptyRoute:"Type to search places and add them from the list (or tap a popular spot); with two or more, today's conditions along the line are analysed.",
  statusGood:"A good day to ride", statusWarn:"Rideable · mind the timing", statusRisk:"Ride with care · challenging section",
@@ -874,6 +885,8 @@ en:{
  escHere:" (right here)", escPending:"— (nearby stations pending TDX)",
  tagSpot:"spot", tagPlace:"place",
  sugMore:"Searching more places…", sugErr:"External geocoding unavailable — showing built-in spots and stations only", sugNone:"No matching place — try another keyword",
+ ldSupply:"Gathering supply points along the line…", supplyK:"Supplies", supStore:"Store", supWater:"Water", supToilet:"Toilet",
+ supGap:g=>`longest ${g} km without supplies`, supNone:"none on this leg", snapBtn:"Restore last analysis", snapOffline:"offline",
  gpxFile:"brompton-route.gpx"
 },
 ja:{
@@ -900,7 +913,7 @@ ja:{
  bl_downS:'<i style="background:#4A6076"></i>急降 −8%未満',
  mSummary:"この到着時刻はどう計算？——実走834本による校正",
  mBody:"<p>本サイトの到着時刻は理論値ではありません。オーナーが 2018–2026 年に Brompton で実際に完走し Komoot に記録した 939 本の走行から校正されています。自転車以外・3 km 未満・タイムスタンプ欠落を除き、<b>834 本・約 31,790 km・620 万トラックポイント</b>が残りました。</p><p>各トラックはまず標高クリーニング：沿線 ±100 m の中央値フィルタでスパイクを除去し、30 m ごとに再サンプル、±60 m 移動平均で平滑化。勾配は ±50 m 窓で取り、各区間を七つの帯——急降（≤−8%）・下り・平坦（−2〜2%）・緩坂・急坂・激坂・極坂（&gt;12%）——に振り分けます。</p><p>ほぼ静止（&lt;1.5 km/h）、GPS スパイク（&gt;80 km/h）、記録ギャップ（隣接点間 ≥10 秒のブリッジ区間）を除外した上で、各帯は<b>有効速度＝Σ距離 ÷ Σ移動時間</b>を採用——平均巡航速度ではありません。遅い区間ほど時間で重みが増し、それこそが「到着時刻」に必要な数字です。標本は直近 24 か月を主とし、不足帯は全期間で補完。</p><p>相互検証：全データの平坦有効速度 16.3 km/h は、独立した一本の実走で測られ沿線到着 3 分誤差の検証を通った 16.2 とほぼ一致。登坂帯も互いに整合します。唯一の例外は極坂帯（標本 29 km・ノイズ混入）で、保守値を採用。各帯の値はフッター参照。各地点の滞在時間は上の欄で別入力され、ペースには混ぜません。</p>",
- colophon:'<b>小布路書</b> · ブロンプトン・ロードブック（旧「単車騎行農民暦」）· バージョン <b>v2.1.1</b>（2026-07-06）<br>© 2026 Chang Chun-Yen · HEALS Design · 無断転載を禁じます<br>ルート・勾配・天気は推定であり参考情報です。走行の安全はご自身で判断してください。<br>簡易時：距離＝直線 × 1.3、獲得標高＝標高差＋km あたり起伏。ETA は勾配別ペース（平坦16.3・緩坂12・急坂8.2・激坂6.6・極坂4.5・下り21.2・急降19.7 km/h、2024–2026 Komoot 実走834本の有効速度で校正）と各地点滞在から算出。向かい風／追い風は区間方位と毎時風向の差。<br>地名は Open-Meteo Geocoding と OpenStreetMap Nominatim、標高は Open-Meteo。デモ天気は例示であり、当日の予報と現地の風雨を優先してください。',
+ colophon:'<b>小布路書</b> · ブロンプトン・ロードブック（旧「単車騎行農民暦」）· バージョン <b>v2.2</b>（2026-07-06）<br>© 2026 Chang Chun-Yen · HEALS Design · 無断転載を禁じます<br>ルート・勾配・天気は推定であり参考情報です。走行の安全はご自身で判断してください。<br>簡易時：距離＝直線 × 1.3、獲得標高＝標高差＋km あたり起伏。ETA は勾配別ペース（平坦16.3・緩坂12・急坂8.2・激坂6.6・極坂4.5・下り21.2・急降19.7 km/h、2024–2026 Komoot 実走834本の有効速度で校正）と各地点滞在から算出。向かい風／追い風は区間方位と毎時風向の差。<br>地名は Open-Meteo Geocoding と OpenStreetMap Nominatim、標高は Open-Meteo。デモ天気は例示であり、当日の予報と現地の風雨を優先してください。',
  todayTerm:"今日の節気", yiChar:"宜", jiChar:"忌",
  emptyRoute:"地名を入力して候補から追加（人気スポットのタップでも可）。2 地点以上で、今日のこのルートの天時を分析します。",
  statusGood:"本日、走るに宜し", statusWarn:"走行可 · 時間帯に注意", statusRisk:"慎重に · 難所あり",
@@ -947,6 +960,8 @@ ja:{
  escHere:"（当地）", escPending:"—（近隣駅は TDX 接続待ち）",
  tagSpot:"スポット", tagPlace:"地点",
  sugMore:"さらに検索中…", sugErr:"外部地名検索が無応答 — 内蔵スポットと駅のみ表示", sugNone:"該当なし — 別のキーワードでお試しを",
+ ldSupply:"沿線の補給ポイントを収集中…", supplyK:"補給", supStore:"コンビニ", supWater:"給水", supToilet:"トイレ",
+ supGap:g=>`最長 ${g} km 補給なし`, supNone:"この区間に補給なし", snapBtn:"前回の分析を復元", snapOffline:"オフライン",
  gpxFile:"brompton-route.gpx"
 }};
 const TERMS_L={
@@ -1027,7 +1042,7 @@ const staFmtRt=st=>(st&&st.ty)?tx('staFmt')(tx('staType')[st.ty]||st.ty,st.nm):s
 let ANALYZE_SEQ=0;
 async function analyze(){
   const seq=++ANALYZE_SEQ;
-  if(WAYPOINTS.length<2){ ROUTE=[]; SEGDATA=[]; renderRoute(); return; }
+  if(WAYPOINTS.length<2){ ROUTE=[]; SEGDATA=[]; SUPPLY=[]; renderRoute(); renderMap(); paintSnapBar(); return; }
   if(WAYPOINTS.some(w=>w.elev===null)){ showLoading(tx('ldElev')); await fillElevations(WAYPOINTS); }
   if(seq!==ANALYZE_SEQ) return;
   ROUTE=WAYPOINTS.slice();
@@ -1036,12 +1051,15 @@ async function analyze(){
   await fetchWeather();        if(seq!==ANALYZE_SEQ) return;
   showLoading(tx('ldRetreat'));
   await computeRetreats();     if(seq!==ANALYZE_SEQ) return;
+  showLoading(tx('ldSupply'));
+  await fetchSupply();         if(seq!==ANALYZE_SEQ) return;
   renderRoute();
   renderMap();
   const tools=document.getElementById('routeTools');
   tools.hidden = ROUTE.length<2;
   document.getElementById('disclaim').hidden = ROUTE.length<2;
   document.getElementById('gmapsBtn').href=gmapsUrl();
+  saveSnap();
 }
 
 // ================= real routing engine (ORS via /api/route), gradients, retreat, AI, map, GPX =================
@@ -1327,6 +1345,103 @@ async function aiParse(){
 
 // ---------- map ----------
 let MAP=null, MAPLAYER=null;
+
+// ================= 沿線補給 + 離線快照 (v2.2) =================
+let SUPPLY=[];
+function xbBucketSup(segs, nodes){
+  // 依各段累積里程分桶;最長無補給缺口只計超商/飲水(公廁不解渴)
+  let c0=0;
+  segs.forEach(s=>{
+    const c1=c0+s.dist;
+    const list=nodes.filter(n=>n.at>=c0-0.05 && n.at<c1+0.05);
+    const hyd=[c0,...list.filter(n=>n.k!=='toilet').map(n=>n.at),c1].sort((a,b)=>a-b);
+    let gap=0; for(let i=1;i<hyd.length;i++) gap=Math.max(gap,hyd[i]-hyd[i-1]);
+    s.sup={ n:{store:list.filter(x=>x.k==='store').length,
+               water:list.filter(x=>x.k==='water').length,
+               toilet:list.filter(x=>x.k==='toilet').length},
+            gap:Math.round(gap*10)/10, dist:Math.round(s.dist*10)/10 };
+    c0=c1;
+  });
+}
+async function fetchSupply(){
+  SUPPLY=[]; SEGDATA.forEach(s=>{ s.sup=null; });
+  try{
+    const line=[]; let cum=0;
+    SEGDATA.forEach(s=>{ const g=s.geom||[];
+      for(let i=0;i<g.length;i++){
+        if(i>0) cum+=haversine({lat:g[i-1][1],lng:g[i-1][0]},{lat:g[i][1],lng:g[i][0]});
+        line.push([g[i][1],g[i][0],cum]);
+      }});
+    const total=cum; if(total<0.5 || line.length<2) return;
+    const step=Math.max(0.4,total/220);
+    const samp=[]; let next=0;
+    line.forEach(p=>{ if(p[2]>=next){ samp.push(p); next=p[2]+step; } });
+    if(samp[samp.length-1][2]<total-0.2) samp.push(line[line.length-1]);
+    const r=await fetch(API('/api/supply'),{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({pts:samp.map(p=>[+p[0].toFixed(4),+p[1].toFixed(4)])})});
+    if(!r.ok){ return; }
+    const j=await r.json();
+    const nodes=(j&&j.nodes)||[];
+    SUPPLY=nodes.map(n=>{
+      let bd=1e9,bk=0;
+      samp.forEach(p=>{ const d=haversine({lat:p[0],lng:p[1]},{lat:n.lat,lng:n.lng}); if(d<bd){bd=d;bk=p[2];} });
+      return {k:n.k,nm:n.nm||"",lat:n.lat,lng:n.lng,at:Math.round(bk*100)/100,off:bd};
+    }).filter(n=>n.off<=0.45).sort((a,b)=>a.at-b.at);
+    xbBucketSup(SEGDATA, SUPPLY);
+  }catch(e){ SUPPLY=[]; }
+}
+function supHtml(S){
+  if(!S || !S.sup) return "";
+  const p=S.sup, bits=[];
+  if(p.n.store)  bits.push(`${tx('supStore')}×${p.n.store}`);
+  if(p.n.water)  bits.push(`${tx('supWater')}×${p.n.water}`);
+  if(p.n.toilet) bits.push(`${tx('supToilet')}×${p.n.toilet}`);
+  const warn=(p.gap>=10 && p.dist>=8)?` <span class="sup-warn">⚠ ${tx('supGap')(p.gap)}</span>`:"";
+  if(!bits.length && !warn) return "";
+  return `<div class="sup-line"><span class="sup-k">${tx('supplyK')}</span>${bits.join(' · ')||tx('supNone')}${warn}</div>`;
+}
+function saveSnap(){
+  const pack=segs=>({v:1,t:Date.now(),wp:WAYPOINTS,seg:segs,wx:[...WXMAP],src:WXSRC,sup:SUPPLY,
+                     start:START,dwell:DWELL,rev:REVERSED,date:START_DATE.toISOString()});
+  try{ localStorage.setItem('xb_snap',JSON.stringify(pack(SEGDATA))); }
+  catch(e){
+    try{ const slim=SEGDATA.map(x=>({...x, geom:(x.geom||[]).filter((_,i)=>i%3===0)}));
+         localStorage.setItem('xb_snap',JSON.stringify(pack(slim))); }catch(e2){}
+  }
+  paintSnapBar();
+}
+function loadSnapObj(){
+  try{ const s=JSON.parse(localStorage.getItem('xb_snap')||'null');
+       return (s&&s.v===1&&Array.isArray(s.wp)&&s.wp.length>=2)?s:null; }catch(e){ return null; }
+}
+function restoreSnap(){
+  const s=loadSnapObj(); if(!s) return false;
+  WAYPOINTS=s.wp; ROUTE=WAYPOINTS.slice(); SEGDATA=s.seg||[];
+  WXMAP=new Map(s.wx||[]); WXSRC=s.src||{k:'demo'}; SUPPLY=s.sup||[];
+  START=s.start; DWELL=s.dwell; REVERSED=!!s.rev; START_DATE=new Date(s.date);
+  const di=document.getElementById('startDate'); if(di&&!isNaN(START_DATE)) di.value=dateISO(START_DATE);
+  const ti=document.getElementById('startTime'); if(ti) ti.value=String(Math.floor(START/60)).padStart(2,'0')+':'+String(START%60).padStart(2,'0');
+  const dw=document.getElementById('dwell'); if(dw) dw.value=DWELL;
+  applyStatic();
+  renderWaypoints(); renderToday(); renderRoute(); renderMap();
+  const tools=document.getElementById('routeTools'); if(tools) tools.hidden=ROUTE.length<2;
+  const dis=document.getElementById('disclaim'); if(dis) dis.hidden=ROUTE.length<2;
+  const gm=document.getElementById('gmapsBtn'); if(gm) gm.href=gmapsUrl();
+  return true;
+}
+function paintSnapBar(){
+  const bar=document.getElementById('snapBar'); if(!bar) return;
+  const s=loadSnapObj();
+  if(!s || WAYPOINTS.length>=2){ bar.hidden=true; return; }
+  const d=new Date(s.t);
+  const when=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  bar.hidden=false;
+  bar.innerHTML=`<button class="mini-btn" id="snapBtn">${tx('snapBtn')}</button>`+
+    `<span class="snap-meta">${s.wp[0].n} → ${s.wp[s.wp.length-1].n} · ${when}${navigator.onLine?'':' · '+tx('snapOffline')}</span>`;
+  const b=document.getElementById('snapBtn'); if(b) b.addEventListener('click',()=>{ restoreSnap(); bar.hidden=true; });
+}
+// ================= /補給 + 快照 =================
+
 function gradeColor(g){
   if(g<-8) return "#4A6076";        // 陡降
   if(g<-2) return "#8FA0B5";        // 下坡
@@ -1429,6 +1544,12 @@ function renderMap(){
     L.circleMarker([p.lat,p.lng],{radius:7,color:"#FBF8F0",weight:2,fillColor:"#BE3D24",fillOpacity:1})
       .bindTooltip(`${i+1} ${p.n}`,{permanent:false}).addTo(MAPLAYER);
     all.push([p.lat,p.lng]);
+  });
+  SUPPLY.forEach(n=>{
+    const col=n.k==='store'?'#B08A3E':n.k==='water'?'#4F6157':'#857A66';
+    const lbl=n.k==='store'?tx('supStore'):n.k==='water'?tx('supWater'):tx('supToilet');
+    L.circleMarker([n.lat,n.lng],{radius:3.5,color:col,weight:1.6,fillColor:'#FBF8F0',fillOpacity:.92})
+      .bindTooltip(`${lbl}${n.nm?` · ${n.nm}`:''}`).addTo(MAPLAYER);
   });
   if(all.length) MAP.fitBounds(all,{padding:[24,24]});
 }
@@ -1585,12 +1706,16 @@ document.getElementById('revBtn').addEventListener('click',e=>{
 document.getElementById('aiBtn').addEventListener('click', aiParse);
 document.getElementById('gpxBtn').addEventListener('click', downloadGpx);
 loadTdxStations();
-console.log("小布路書 v2.1.1 (2026-07-06) · zh/en/ja · Komoot 834趟有效速度校準");
+console.log("小布路書 v2.2 (2026-07-06) · zh/en/ja · 離線快照＋沿線補給 · Komoot 834趟有效速度校準");
 document.querySelectorAll('.lang-sw button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
 applyStatic();
 renderWaypoints();
 renderToday();
 analyze();
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }
+window.addEventListener('online', paintSnapBar);
+window.addEventListener('offline', paintSnapBar);
+if(!navigator.onLine && loadSnapObj()){ restoreSnap(); } else { paintSnapBar(); }
 </script>
 </body>
 </html>
