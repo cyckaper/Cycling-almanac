@@ -1,5 +1,5 @@
 // 小布路書 離線殼層 v2.2 — 同源檔案 stale-while-revalidate;/api/ 一律直通網路;字型機會性快取
-const V = 'xb-v230';
+const V = 'xb-v231';
 const CORE = ['./','./manifest.webmanifest','./vendor/leaflet/leaflet.css','./vendor/leaflet/leaflet.js','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).catch(()=>{}));
@@ -14,9 +14,22 @@ self.addEventListener('fetch', e => {
   if (u.pathname.startsWith('/api/')) return;                    // 資料一律走網路
   if (u.origin === location.origin) {
     e.respondWith(caches.open(V).then(async c => {
-      const hit = await c.match(e.request, { ignoreSearch: u.pathname === '/' });
-      const net = fetch(e.request).then(r => { if (r && r.ok) c.put(e.request, r.clone()); return r; }).catch(() => null);
-      return hit || (await net) || new Response('offline', { status: 503 });
+      const netP = fetch(e.request).then(r => { if (r && r.ok) c.put(e.request, r.clone()); return r; });
+      const isNav = e.request.mode === 'navigate' || u.pathname === '/';
+      if (isNav) {
+        // 首頁：網路優先（3 秒逾時）→ 快取。連線即見最新版；離線或過慢退快照。
+        try {
+          const net = await Promise.race([netP, new Promise((_, rj) => setTimeout(() => rj(new Error('slow')), 3000))]);
+          if (net && net.ok) return net;
+          throw new Error('bad');
+        } catch (err) {
+          const hit = await c.match(e.request, { ignoreSearch: true });
+          return hit || (await netP.catch(() => null)) || new Response('offline', { status: 503 });
+        }
+      }
+      // 其餘同源資產維持 stale-while-revalidate
+      const hit = await c.match(e.request);
+      return hit || (await netP.catch(() => null)) || new Response('offline', { status: 503 });
     }));
   } else if (/fonts\.(gstatic|googleapis)\.com$/.test(u.hostname)) {
     e.respondWith(caches.open(V + '-rt').then(async c => {
